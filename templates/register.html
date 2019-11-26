@@ -1,0 +1,24 @@
+<h2>Neues Konto erstellen: </h2>
+
+<div id="characters">
+    <p>
+        Nutzername und Passwort müssen aus jeweils mind. 6 Zeichen bestehen. </br>
+        Zulässige Zeichen: a-z (Groß- und Kleinbuchstaben), Ziffern 0-9
+    </p>
+</div>
+<div id="inputWrapper">
+    <form id="loginForm" action="http://localhost:4242/postUserLoginData">
+        <label>Nutzername</label>
+        <input class="inputs" type="text" name="usernameInput" id="usernameInput" />
+        </br>
+        <label>Passwort</label>
+        <input class="inputs" type="text" name="passwordInput" id="passwordInput" />
+    </form>
+</div>
+
+<div id="submit">
+    <input type="button" value="Zurück zum Login" id="changeToLogin">
+    <input type="button" class="button" value="Registrieren" id="registerButton">
+</div>
+
+<div id="errorOutput"></div>

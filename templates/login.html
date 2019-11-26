@@ -1,0 +1,21 @@
+{{define "login"}}
+<h2>Anmelden</h2>
+
+<div id="inputWrapper">
+    <form id="loginForm" action="http://localhost:4242/getRegistration">
+        <label>Nutzername</label>
+        <input class="inputs" type="text" name="usernameInput" id="usernameInput" />
+        </br>
+        <label>Passwort</label>
+        <input class="inputs" type="text" name="passwordInput" id="passwordInput" />
+    </form>
+</div>
+
+<div id="submit">
+    <input type="button" class="button" value="Anmelden" id="loginButton">
+    <input type="button" value="Neues Konto Erstellen" id="changeToRegister">
+</div>
+
+<div id="errorOutput"></div>
+
+{{end}}

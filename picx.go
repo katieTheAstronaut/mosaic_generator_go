@@ -9,37 +9,16 @@ import (
 	"html/template"
 	"net/http"
 
+	"./usermanagement"
+
 	"github.com/globalsign/mgo"
 )
 
 // Externe Template-Dateien einlesen
-var t = template.Must(template.ParseFiles("templates/picx.html"))
-
-//#################################
-// Nutzerverwaltung
-//#################################
+var t = template.Must(template.ParseFiles("templates/picx.html", "templates/register.html", "templates/login.html", "templates/login2.html"))
 
 // deklariert Datenbank
 var dataB *mgo.Database
-
-// Collection für Nutzerdaten erstellen
-var collectionUser *mgo.Collection
-
-//struct für Nutzer
-type User struct {
-	Username string `bson:"username"`
-	Password string `bson:"password"`
-}
-
-// Funktion um neuen Nutzer in der DB zu erstellen
-func registerNewUser(user string, pw string) {
-
-	// Neues Nutzer-Dokument in CollectionUser anlegen
-	newUser := User{user, pw}
-	// Neuen Nutzer in Collection übergeben
-	_ = collectionUser.Insert(newUser)
-
-}
 
 //#################################
 // Main
@@ -55,30 +34,53 @@ func main() {
 	// Datenbank wählen (bzw. neu erstellen, wenn noch nicht vorhanden)
 	dataB = dbSession.DB("HA19DB_kathrin_duerkop_630119")
 
-	// collection für Nutzerverwaltung erstellen
-	collectionUser = dataB.C("collUser")
-
-	registerNewUser("test2", "pw2")
-	// // Testnutzer-Dokument in CollectionUser anlegen
-	// testuser := User{"test1", "passwort1"}
-	// // Testnutzer in Collection übergeben
-	// _ = collectionUser.Insert(testuser)
+	// Collection für Nutzerverwaltung an usermanagement package übergeben
+	usermanagement.GetUserCollection(dataB.C("collUser"))
 
 	// ----Handler-------------------------
 
-	// File Server für statische Element (CSS, JS, ..)
+	// File Server für statische Element (CSS, JS, ..) registrieren
 	http.Handle("/", http.FileServer(http.Dir("./static/")))
 
-	http.HandleFunc("/home", homeHandler)
+	// Handler
+	http.HandleFunc("/home", handlerHome)                       // http://localhost:4242/home
+	http.HandleFunc("/postUserLoginData", handlerUserLoginData) // http://localhost:4242/postUserLoginData
+	http.HandleFunc("/getRegistration", handlerGetRegistration) // http://localhost:4242/getRegistration
+	http.HandleFunc("/getLogin", handlerGetLogin)               // http://localhost:4242/getLogin
 
 	err := http.ListenAndServe(":4242", nil)
-
 	if err != nil {
 		fmt.Println(err)
 	}
 
 }
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
+// Handler für den Aufruf der Startseite (Login)
+func handlerHome(w http.ResponseWriter, r *http.Request) {
+	// Homeseite darstellen
 	t.ExecuteTemplate(w, "picx.html", nil)
+}
+
+// Handler für die Verarbeitung der im Client eingegebenen LoginDaten
+func handlerUserLoginData(w http.ResponseWriter, r *http.Request) {
+
+	// Logindaten auslesen
+	username := r.PostFormValue("usernameInput")
+	password := r.PostFormValue("passwordInput")
+
+	// Neuen Nutzer registrieren und falls nötig Fehlermeldung abfangen
+	errorMessage := usermanagement.RegisterNewUser(username, password)
+
+	// Fehlermeldung an Client zurückschicken, damit diese dem Nutzer dargestellt werden kann
+	fmt.Fprint(w, errorMessage)
+}
+
+// Handler für den Aufruf der Registrierungsseite
+func handlerGetRegistration(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, t.ExecuteTemplate(w, "register.html", nil))
+}
+
+// Handler für den Aufruf der Registrierungsseite
+func handlerGetLogin(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, t.ExecuteTemplate(w, "login2.html", nil))
 }

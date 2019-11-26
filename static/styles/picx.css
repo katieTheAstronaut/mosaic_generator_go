@@ -12,9 +12,76 @@ body {
 }
 
 
-/* ----------------------- Header und Navigationselemente -----------------------*/
+/* ----------------------- Header -----------------------*/
 
 #header {
+    font-size: 2em;
     color: black;
-    background-color: lightgray;
+    background-color: rgb(131, 212, 212);
+    margin-bottom: 30px;
+}
+
+
+/* ----------------------- Restlichen Elemente -----------------------*/
+#errorOutput {
+    margin: 40px auto;
+    background-color: rgb(224, 165, 165);
+    width: 50%;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 50px;  
+}
+
+#inputWrapper{
+    margin: 0px auto;
+    width: 300px;
+}
+
+.inputs{
+    float:right;
+}
+
+.button{
+    width: 100px;
+    height: 40px;
+    font-size: 1.5em;
+}
+
+#changeToRegister{
+    border: none;
+    background:none;
+    padding:0;
+    font-size: 0.5em;
+    margin-left: 10px;
+    color: red;
+}
+
+#changeToLogin{
+    border: none;
+    background:none;
+    padding:0;
+    font-size: 0.5em;
+    margin-left: 10px;
+    color: red;
+}
+
+#submit{
+    width: 230px;
+    margin: 30px auto;
+}
+
+h2{
+    text-align: center;
+    vertical-align: middle;
+    line-height: 90px;  
+}
+
+#characters{
+    font-size: 0.7em;
+    background-color: rgb(236, 234, 234);
+    border: 1px solid rgb(66, 66, 66);
+    width: 350px;
+    margin: 30px auto;
+    text-align: center;
+    vertical-align: middle;
 }
