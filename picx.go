@@ -82,5 +82,5 @@ func handlerGetRegistration(w http.ResponseWriter, r *http.Request) {
 
 // Handler für den Aufruf der Registrierungsseite
 func handlerGetLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, t.ExecuteTemplate(w, "login2.html", nil))
+	fmt.Fprint(w, t.ExecuteTemplate(w, "login.html", nil))
 }

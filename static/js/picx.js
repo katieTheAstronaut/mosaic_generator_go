@@ -15,8 +15,9 @@ window.addEventListener("load", function () {
 
         // callback, um Fehlermeldungen als Antwort zu erhalten und diese im html einzusetzen
         xhrGetRegistration.addEventListener('load', function () {
+        
             $("template").innerHTML = xhrGetRegistration.responseText;
-
+            
             // JavaScript Funktionen für das Register Template initialisieren.
             addJSforRegister();
         });
