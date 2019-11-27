@@ -30,19 +30,19 @@ func RegisterNewUser(user string, pw string) (errorMessage string) {
 
 	// Prüfen ob Nutzername und Passwort angegeben wurden
 	if user == "" || pw == "" {
-		errorMessage = "Bitte Nutzername und Passwort angeben!"
+		errorMessage = "Fehler: Bitte Nutzername und Passwort angeben!"
 		return errorMessage
 	}
 
 	// Prüfen ob Passwort lang genug ist
 	if len(pw) <= 5 {
-		errorMessage = "Das Passwort sollte aus mindesten 6 Zeichen bestehen!"
+		errorMessage = "Fehler: Das Passwort sollte aus mindesten 6 Zeichen bestehen!"
 		return errorMessage
 	}
 
 	// Prüfen ob nur zulässige Zeichen verwendet wurden
 	if !(isValidString(user) && isValidString(pw)) {
-		errorMessage = "Bitte nur gültige Zeichen verwenden!"
+		errorMessage = "Fehler: Bitte nur gültige Zeichen verwenden!"
 		return errorMessage
 	}
 
@@ -50,7 +50,7 @@ func RegisterNewUser(user string, pw string) (errorMessage string) {
 	userExists := User{}
 	collectionUser.Find(bson.M{"username": user}).One(&userExists)
 	if userExists.Username != "" {
-		errorMessage = "Der Nutzer existiert bereits!"
+		errorMessage = "Fehler: Der Nutzer existiert bereits!"
 		return errorMessage
 	}
 
@@ -63,10 +63,32 @@ func RegisterNewUser(user string, pw string) (errorMessage string) {
 	return ""
 }
 
-// // Testnutzer-Dokument in CollectionUser anlegen
-// testuser := User{"test1", "passwort1"}
-// // Testnutzer in Collection übergeben
-// _ = collectionUser.Insert(testuser)
+// Funktion zum Prüfen, ob Nutzer angemeldet werden kann
+func LoginUser(user string, pw string) (errorMessage string) {
+
+	// Prüfen ob Nutzername und Passwort angegeben wurden
+	if user == "" || pw == "" {
+		errorMessage = "Fehler: Bitte Nutzername und Passwort angeben!"
+		return errorMessage
+	}
+
+	// Prüfen ob Nutzer existiert
+	userExists := User{}
+	collectionUser.Find(bson.M{"username": user}).One(&userExists)
+	if userExists.Username == "" {
+		errorMessage = "Fehler: Der Nutzer existiert nicht!"
+		return errorMessage
+	}
+
+	// Prüfen ob Passwort richtig ist
+	if userExists.Password != pw {
+		errorMessage = "Fehler: Falsches Passwort angegeben!"
+		return errorMessage
+	}
+
+	// wenn alles richtig ist, kann Nutzer angemeldet werden
+	return ""
+}
 
 // Funktion zum Prüfen, ob übergebener String nur aus Buchstaben besteht
 func isValidString(value string) (isValid bool) {
