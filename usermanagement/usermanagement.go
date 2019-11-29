@@ -20,7 +20,7 @@ type User struct {
 // Collection für Nutzerdaten erstellen
 var collectionUser *mgo.Collection
 
-// Funktion um neue Collection in der Datenbank zu erstellen
+// Funktion um NutzerCollection aus Main Package zu holen
 func GetUserCollection(collection *mgo.Collection) {
 	collectionUser = collection
 }
@@ -35,7 +35,7 @@ func RegisterNewUser(user string, pw string) (errorMessage string) {
 	}
 
 	// Prüfen ob Passwort lang genug ist
-	if len(pw) <= 5 {
+	if len(pw) <= 1 {
 		errorMessage = "Fehler: Das Passwort sollte aus mindesten 6 Zeichen bestehen!"
 		return errorMessage
 	}

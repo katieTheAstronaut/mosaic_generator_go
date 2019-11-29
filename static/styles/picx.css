@@ -22,7 +22,7 @@ body {
 }
 
 
-/* ----------------------- Restlichen Elemente -----------------------*/
+/* ----------------------- Elemente der login und registration templates -----------------------*/
 #errorOutput {
     margin: 40px auto;
     background-color: rgb(224, 165, 165);
@@ -85,3 +85,62 @@ h2{
     text-align: center;
     vertical-align: middle;
 }
+
+
+
+/* ----------------------- Elemente des home-Templates -----------------------*/
+
+#tripleSectionWrapper{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.sectionWrapper{
+    width: 200px;
+    height: 200px;
+    border: 1px solid;
+    border-radius: 50%;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 200px;  
+}
+
+#motiveWrapper{
+    background-color: rgb(146, 238, 226);
+}
+
+#poolWrapper{
+    background-color: rgb(73, 211, 221);
+}
+
+#mosaicWrapper{
+    background-color: rgb(26, 101, 145);
+}
+
+
+/* ----------------------- Elemente des images-Templates -----------------------*/
+
+
+#newImageSetWrapper, #imageSetWrapper, #newImageWrapper{
+    margin-left: 20px;
+}
+
+#titleImages {
+    text-align: center;
+    vertical-align: middle;
+    width: 70%;
+    margin: 0 auto;
+    font-size: 1.4em;
+}
+
+#newImageWrapper{
+    margin-top: 50px;
+}
+
+#imageUploadForm{
+    margin:20px auto;
+    width: 80%;
+}
+
+

@@ -20,8 +20,6 @@ function addJSforRegister() {
 
         // callback, um Fehlermeldungen als Antwort zu erhalten und diese im html einzusetzen
         xhrPostUserInfo.addEventListener('load', function () {
-
-            console.log(xhrPostUserInfo.responseText.indexOf("Fehler"))
             // Prüfen, ob Antwort Fehlercode beinhaltet oder nicht
             if (xhrPostUserInfo.responseText.indexOf("Fehler") == 0) {
                 // Falls Fehler
@@ -113,10 +111,11 @@ function addJSforLogin() {
             } else {
                 // Falls kein Fehler, wurde nur Template geliefert
                 $("template").innerHTML = xhrGetHome.responseText;
+                // JavaScript Funktionen für das Home Template initialisieren.
+                addJSforHome();
             }
 
-            // JavaScript Funktionen für das Home Template initialisieren.
-            // addJSforHome();
+
         });
 
         // Anfrage definieren und mit FormValues absenden
@@ -128,14 +127,114 @@ function addJSforLogin() {
 
 };
 
+//#################################
+//Home-Template
+//#################################
+
+function addJSforHome() {
+
+    // Eventlistener für den Motive-Button
+    $("motiveWrapper").addEventListener("click", function () {
+
+        //------------------------------------------------
+        // XMLHttpRequest um Motive-Seite anzufordern
+        //------------------------------------------------
+        var xhrGetImageTemplate = new XMLHttpRequest();
+
+        // callback, um Template als Antwort zu erhalten und diese im html einzusetzen
+        xhrGetImageTemplate.addEventListener('load', function () {
+
+            $("template").innerHTML = xhrGetImageTemplate.responseText;
+            addJSforImages();
+            // JavaScript Funktionen für das nächste Template initialisieren.
+
+        });
+
+        // Anfrage definieren und mit FormValues absenden
+        xhrGetImageTemplate.open('GET', 'http://localhost:4242/images');
+        xhrGetImageTemplate.send();
+
+    });
 
 
-/* ----------------------- Helferfunktionen -----------------------*/
+
+
+};
+
+
+
+//#################################
+//Images-Template
+//#################################
+
+function addJSforImages() {
+    // Eventlistener für den Motive-Button
+    $("newImgSubmit").addEventListener("click", function () {
+
+        //------------------------------------------------
+        // XMLHttpRequest um Bild hochzuladen
+        //------------------------------------------------
+        var xhrPostImage = new XMLHttpRequest();
+
+
+        // callback, um Template als Antwort zu erhalten und diese im html einzusetzen
+        // xhrPostImage.addEventListener('load', function () {
+
+        //    console.log(responseText);
+        //     // $("template").innerHTML = xhrPostImage.responseText;
+
+        //     // JavaScript Funktionen für das nächste Template initialisieren.
+
+        // });
+
+        // Anfrage definieren und mit FormValues absenden
+        xhrPostImage.open('POST', 'http://localhost:4242/uploadImage');
+        xhrPostImage.send(new FormData($('imageUploadForm')));
+
+    });
+
+
+
+    // Eventlistener für den  Sammlung Erstellen-Button
+    $("newImgSetSubmit").addEventListener("click", function () {
+
+        //------------------------------------------------
+        // XMLHttpRequest um Bild hochzuladen
+        //------------------------------------------------
+        var xhrPostImageSet = new XMLHttpRequest();
+
+
+        // callback, um Template als Antwort zu erhalten und diese im html einzusetzen
+        // xhrPostImage.addEventListener('load', function () {
+
+        //    console.log(responseText);
+        //     // $("template").innerHTML = xhrPostImage.responseText;
+
+        //     // JavaScript Funktionen für das nächste Template initialisieren.
+
+        // });
+
+        // Anfrage definieren und mit FormValues absenden
+        xhrPostImageSet.open('POST', 'http://localhost:4242/createSet');
+        xhrPostImageSet.send(new FormData($('imageSetForm')));
+
+
+
+
+    });
+
+}
+
+
+//#################################
+//Helferfunktionen
+//#################################
 // Funktionen, die das Programmieren lediglich einfacher und effizienter machen
 
 
 
-
+// Funktion um ein DOM-Element zu holen
 function $(id) {
     return document.getElementById(id);
 }
+

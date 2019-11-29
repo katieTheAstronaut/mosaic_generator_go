@@ -4,18 +4,23 @@
 
 package main
 
+// Importierte Packages
 import (
 	"fmt"
 	"html/template"
 	"net/http"
 
+	// Eigene Packages
+
+	"./images"
 	"./usermanagement"
 
+	// Externe Packages
 	"github.com/globalsign/mgo"
 )
 
 // Externe Template-Dateien einlesen
-var t = template.Must(template.ParseFiles("templates/picx.html", "templates/register.html", "templates/login.html", "templates/home.html"))
+var t = template.Must(template.ParseFiles("templates/picx.html", "templates/register.html", "templates/login.html", "templates/home.html", "templates/images.html"))
 
 // deklariert Datenbank
 var dataB *mgo.Database
@@ -35,7 +40,10 @@ func main() {
 	dataB = dbSession.DB("HA19DB_kathrin_duerkop_630119")
 
 	// Collection für Nutzerverwaltung an usermanagement package übergeben
-	usermanagement.GetUserCollection(dataB.C("collUser"))
+	usermanagement.GetUserCollection(dataB.C("userColl"))
+
+	// Collections für Basismotive und Motivsammlungen an package images übergeben
+	images.GetImgCollections(dataB.GridFS("imageColl"), dataB.C("imgSetColl"))
 
 	// ----Handler-------------------------
 
@@ -48,6 +56,9 @@ func main() {
 	http.HandleFunc("/getRegistration", handlerGetRegistration) // http://localhost:4242/getRegistration
 	http.HandleFunc("/getLogin", handlerGetLogin)               // http://localhost:4242/getLogin
 	http.HandleFunc("/home", handlerHome)                       // http://localhost:4242/home
+	http.HandleFunc("/images", handlerImages)                   // http://localhost:4242/images
+	http.HandleFunc("/uploadImage", handlerUploadImage)         // http://localhost:4242/uploadImage
+	http.HandleFunc("/createSet", handlerCreateSet)             // http://localhost:4242/createSet
 
 	err := http.ListenAndServe(":4242", nil)
 	if err != nil {
@@ -56,11 +67,9 @@ func main() {
 
 }
 
-// Handler für den Initialen Aufruf der Pixc-Seite
-func handlerPicx(w http.ResponseWriter, r *http.Request) {
-	// Base-Template mit integriertem Login-Bereich aufrufen
-	t.ExecuteTemplate(w, "picx.html", nil)
-}
+//#################################
+// Handler für Login/Registrierung
+//#################################
 
 // Handler für die Verarbeitung der im Client eingegebenen Registrierungsdaten
 func handlerNewUser(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +89,38 @@ func handlerNewUser(w http.ResponseWriter, r *http.Request) {
 		// Fehlermeldung an Client zurückschicken, damit diese dem Nutzer dargestellt werden kann
 		fmt.Fprint(w, errorMessage)
 	}
+}
 
+// Handler für den Aufruf der Übersichtsseite (Home) von der Anmeldung aus
+func handlerHome(w http.ResponseWriter, r *http.Request) {
+
+	// Logindaten für neuen Nutzer auslesen
+	user := r.PostFormValue("usernameInput")
+	pw := r.PostFormValue("passwordInput")
+
+	// Prüfen ob der Nutzer angemeldet werden kann
+	errorMessage := usermanagement.LoginUser(user, pw)
+
+	// Falls kein Fehler geworfen wurde, kann der Nutzer angemeldet werden
+	if errorMessage == "" {
+
+		// Homeseite darstellen
+		fmt.Fprint(w, t.ExecuteTemplate(w, "home.html", nil))
+
+	} else {
+		fmt.Fprint(w, errorMessage)
+	}
+
+}
+
+//#################################
+// Handler für Template- bzw. Seitenaufrufe
+//#################################
+
+// Handler für den Initialen Aufruf der Pixc-Seite
+func handlerPicx(w http.ResponseWriter, r *http.Request) {
+	// Base-Template mit integriertem Login-Bereich aufrufen
+	t.ExecuteTemplate(w, "picx.html", nil)
 }
 
 // Handler für den Aufruf der Registrierungsseite
@@ -93,28 +133,22 @@ func handlerGetLogin(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, t.ExecuteTemplate(w, "login.html", nil))
 }
 
-// Handler für den Aufruf der Übersichtsseite (Home) von der Anmeldung aus
-func handlerHome(w http.ResponseWriter, r *http.Request) {
+// Handler für Aufruf der Motiv-Übersichtsseite
+func handlerImages(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, t.ExecuteTemplate(w, "images.html", nil))
+}
 
-	// Logindaten für neuen Nutzer auslesen
-	user := r.PostFormValue("usernameInput")
-	pw := r.PostFormValue("passwordInput")
+// Handler für den Upload von Bildern
+func handlerUploadImage(w http.ResponseWriter, r *http.Request) {
+	// Funktion aufrufen (package images) um Bilder hochzuladen
+	// Hier müssen Datenbank, Collection für die Bilder übergeben werden
+	images.AddImage(r)
+}
 
-	fmt.Println(user)
-	fmt.Println(pw)
+// Handler für die Erstellung einer neuen Basismotiv-Sammlung
+func handlerCreateSet(w http.ResponseWriter, r *http.Request) {
 
-	errorMessage := usermanagement.LoginUser(user, pw)
-
-	fmt.Println(errorMessage)
-
-	// Falls kein Fehler geworfen wurde, kann der Nutzer angemeldet werden
-	if errorMessage == "" {
-
-		// Homeseite darstellen
-		fmt.Fprint(w, t.ExecuteTemplate(w, "home.html", nil))
-
-	} else {
-		fmt.Fprint(w, errorMessage)
-	}
-
+	// Ruft Funktion im package images auf, um neue Basismotiv-Sammlung
+	// in der DB anzulegen
+	images.CreateImageSet(r)
 }
