@@ -87,6 +87,7 @@ func LoginUser(user string, pw string) (errorMessage string) {
 	}
 
 	// wenn alles richtig ist, kann Nutzer angemeldet werden
+
 	return ""
 }
 

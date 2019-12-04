@@ -1,7 +1,8 @@
 // EventListener für den initialen Aufruf der picx-Seite lädt lediglich die spezifischen 
-// JS-Funktionen für das Login-Template
+// JS-Funktionen für das Login-Template und die EventListener für den Logout-Button im Header
 window.addEventListener("load", function () {
     addJSforLogin();
+
 });
 
 // //#################################
@@ -111,6 +112,9 @@ function addJSforLogin() {
             } else {
                 // Falls kein Fehler, wurde nur Template geliefert
                 $("template").innerHTML = xhrGetHome.responseText;
+                // LogoutButton darstellen
+                $("logout").innerText = "Abmelden";
+                addJSforLogoutButton();
                 // JavaScript Funktionen für das Home Template initialisieren.
                 addJSforHome();
             }
@@ -127,11 +131,40 @@ function addJSforLogin() {
 
 };
 
+
+
+function addJSforLogoutButton() {
+    // EventListener für den Logout-Button
+    $("logout").addEventListener("click", function () {
+
+        //------------------------------------------------
+        // XMLHttpRequest um Nutzer auszuloggen und ihn zur Login-Seite zurückzuschicken
+        //------------------------------------------------
+        // neues XMLHttpRequest anlegen
+        var xhrLogout = new XMLHttpRequest();
+
+        // callback, um Fehlermeldungen als Antwort zu erhalten und diese im html einzusetzen
+        xhrLogout.addEventListener('load', function () {
+            $("logout").innerText = "";
+            $("template").innerHTML = xhrLogout.responseText;
+            addJSforLogin();
+        });
+
+        // Anfrage definieren und mit FormValues absenden
+        xhrLogout.open('GET', 'http://localhost:4242/logout');
+        xhrLogout.send();
+
+    });
+}
+
+
 //#################################
 //Home-Template
 //#################################
 
 function addJSforHome() {
+
+
 
     // Eventlistener für den Motive-Button
     $("motiveWrapper").addEventListener("click", function () {
@@ -168,7 +201,64 @@ function addJSforHome() {
 //#################################
 
 function addJSforImages() {
-    // Eventlistener für den Motive-Button
+
+    // Eventlistener für den "Sammlung Erstellen"-Button
+    $("newImgSetSubmit").addEventListener("click", function () {
+
+        //------------------------------------------------
+        // XMLHttpRequest um neue Sammlung zu erstellen
+        //------------------------------------------------
+        var xhrPostImageSet = new XMLHttpRequest();
+
+        // Nachdem neue Sammlung erstellt wurde, soll Template neu aufgerufen werden (mit aktualisierten Informationen)
+        xhrPostImageSet.addEventListener('load', function () {
+            $("template").innerHTML = xhrPostImageSet.responseText;
+            // JavaScript Funktionen für das nächste Template initialisieren.
+            addJSforImages();
+        });
+
+        // Anfrage definieren und mit FormValues absenden
+        xhrPostImageSet.open('POST', 'http://localhost:4242/createSet');
+        xhrPostImageSet.send(new FormData($('imageSetForm')));
+
+    });
+
+
+    // Eventlistener für alle Sammlungs-Buttons, die zur jeweiligen Sammlungsseite führen
+    var buttons = document.getElementsByClassName("setButtons");
+
+    for (i = 0; i < buttons.length; i++) {
+        buttons[i].addEventListener("click", function () {
+
+            //------------------------------------------------
+            // XMLHttpRequest um Sammlung darzustellen
+            //------------------------------------------------
+            var xhrShowImageSet = new XMLHttpRequest();
+
+            // callback, um Template als Antwort zu erhalten und diese im html einzusetzen
+            xhrShowImageSet.addEventListener('load', function () {
+                $("template").innerHTML = xhrShowImageSet.responseText;
+                // JavaScript Funktionen für das nächste Template initialisieren.
+                addJSforImageSet();
+            });
+            // Anfrage definieren und Sammlungsname als Query mit absenden
+            var setName = this.value; // Wert des aktuell gedrückten Buttons auslesen = Sammlungsname
+            xhrShowImageSet.open('POST', `http://localhost:4242/showSet?imgSet=${setName}`);
+            xhrShowImageSet.send();
+
+        });
+    }
+
+
+}
+
+
+//#################################
+//ImageSet-Template
+//#################################
+function addJSforImageSet() {
+
+    // Eventlistener für den Bild hochladen - Button
     $("newImgSubmit").addEventListener("click", function () {
 
         //------------------------------------------------
@@ -193,37 +283,36 @@ function addJSforImages() {
 
     });
 
-
-
-    // Eventlistener für den  Sammlung Erstellen-Button
-    $("newImgSetSubmit").addEventListener("click", function () {
+    // Eventlistener für den Bild hochladen - Button
+    $("show").addEventListener("click", function () {
 
         //------------------------------------------------
         // XMLHttpRequest um Bild hochzuladen
         //------------------------------------------------
-        var xhrPostImageSet = new XMLHttpRequest();
+        var xhrShowImage = new XMLHttpRequest();
 
 
         // callback, um Template als Antwort zu erhalten und diese im html einzusetzen
-        // xhrPostImage.addEventListener('load', function () {
+        xhrShowImage.addEventListener('load', function () {
 
-        //    console.log(responseText);
-        //     // $("template").innerHTML = xhrPostImage.responseText;
 
-        //     // JavaScript Funktionen für das nächste Template initialisieren.
+            $("template").innerHTML = xhrShowImage.responseText;
 
-        // });
+            // JavaScript Funktionen für das nächste Template initialisieren.
+
+        });
 
         // Anfrage definieren und mit FormValues absenden
-        xhrPostImageSet.open('POST', 'http://localhost:4242/createSet');
-        xhrPostImageSet.send(new FormData($('imageSetForm')));
-
-
-
+        xhrShowImage.open('GET', 'http://localhost:4242/showImg');
+        xhrShowImage.send();
 
     });
 
+
+
 }
+
+
 
 
 //#################################

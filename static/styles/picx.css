@@ -120,7 +120,11 @@ h2{
 
 
 /* ----------------------- Elemente des images-Templates -----------------------*/
-
+#header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
 
 #newImageSetWrapper, #imageSetWrapper, #newImageWrapper{
     margin-left: 20px;

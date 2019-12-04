@@ -1,0 +1,26 @@
+<!-- Template für die Darstellung einer Basismotivsammlung -->
+
+<div id="newImageWrapper">
+        Sammlung {{.}} :
+        </br>
+    <div class="title">Füge deiner Sammlung ein Bild hinzu:</div>
+
+    
+    <form id="imageUploadForm" enctype="multipart/form-data">
+        <fieldset>
+            <input type="file" name="newImg" id="newImg" multiple>
+
+            </br></br>
+            <input type="button" name="newImgSubmit" id="newImgSubmit" value="Bild hochladen">
+        </fieldset>
+    </form>
+
+
+</div>
+
+<div id="showImages"> Deine Bisherigen Bilder:
+
+        <input type="button" name="show" id="show" value="Bild zeigen">
+
+        <img alt="" src="http://localhost:4242/showImg">
+</div>
