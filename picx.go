@@ -8,8 +8,6 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"io"
-	"log"
 	"net/http"
 
 	// Eigene Packages
@@ -35,6 +33,16 @@ type ImageSet struct {
 
 type ImageSetList struct {
 	ImgSets []ImageSet
+}
+
+type Image struct {
+	Filename string `bson:"filename"`
+	URL      string `bson:"url"`
+}
+
+type ImageList struct {
+	Images []Image
+	ImgSet string `bson:"set"`
 }
 
 //#################################
@@ -68,6 +76,7 @@ func main() {
 	http.HandleFunc("/getRegistration", handlerGetRegistration) // http://localhost:4242/getRegistration
 	http.HandleFunc("/getLogin", handlerGetLogin)               // http://localhost:4242/getLogin
 	http.HandleFunc("/home", handlerHome)                       // http://localhost:4242/home
+	http.HandleFunc("/backToHome", handlerBackToHome)           // http://localhost:4242/backToHome
 	http.HandleFunc("/images", handlerImages)                   // http://localhost:4242/images
 	http.HandleFunc("/uploadImage", handlerUploadImage)         // http://localhost:4242/uploadImage
 	http.HandleFunc("/createSet", handlerCreateSet)             // http://localhost:4242/createSet
@@ -120,8 +129,8 @@ func handlerHome(w http.ResponseWriter, r *http.Request) {
 	if errorMessage == "" {
 
 		// Cookie erstellen für Nutzer
-		cookie := http.Cookie{Name: "currentUser", Value: user}
-		http.SetCookie(w, &cookie)
+		usermanagement.CreateCookie("currentUser", user, w)
+
 		// Homeseite darstellen
 		fmt.Fprint(w, t.ExecuteTemplate(w, "home.html", nil))
 
@@ -129,6 +138,11 @@ func handlerHome(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, errorMessage)
 	}
 
+}
+
+// Handler für den Aufruf der Übersichtsseite (Home) von einer anderen Seite aus
+func handlerBackToHome(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, t.ExecuteTemplate(w, "home.html", nil))
 }
 
 //#################################
@@ -139,10 +153,8 @@ func handlerHome(w http.ResponseWriter, r *http.Request) {
 func handlerPicx(w http.ResponseWriter, r *http.Request) {
 
 	// Bei Neuaufruf der Seite alle Cookies löschen
-	cookie := http.Cookie{Name: "currentUser", MaxAge: -1}
-	http.SetCookie(w, &cookie)
-	cookieSet := http.Cookie{Name: "currentImgSet", MaxAge: -1}
-	http.SetCookie(w, &cookieSet)
+	usermanagement.DeleteCookie("currentUser", w)
+	usermanagement.DeleteCookie("currentImgSet", w)
 
 	// Base-Template mit integriertem Login-Bereich aufrufen
 	t.ExecuteTemplate(w, "picx.html", nil)
@@ -161,6 +173,11 @@ func handlerGetLogin(w http.ResponseWriter, r *http.Request) {
 // Handler für Aufruf der Motiv-Übersichtsseite
 func handlerImages(w http.ResponseWriter, r *http.Request) {
 
+	// Falls Cookie einer Sammlung existiert, diesen löschen
+	cookieExists := images.CheckCookie(r, "currentImgSet")
+	if cookieExists != "" {
+		usermanagement.DeleteCookie("currentImgSet", w)
+	}
 	// Alle Sammlungen des Nutzers holen, damit diese im Template dargestellt werden können
 	userImageSets := images.GetAllImageSets(r)
 
@@ -169,9 +186,13 @@ func handlerImages(w http.ResponseWriter, r *http.Request) {
 
 // Handler für den Upload von Bildern
 func handlerUploadImage(w http.ResponseWriter, r *http.Request) {
-	// Funktion aufrufen (package images) um Bilder hochzuladen
-	// Hier müssen Datenbank, Collection für die Bilder übergeben werden
+	// Funktion aufrufen (package images) um Bilder zur DB hinzuzufügen
 	images.AddImage(r)
+
+	//Aktuelle Liste an Basismotiven abrufen
+	newImgList := images.DisplaySet(r, w)
+	// Template für Motivsammlung aufrufen und bildliste übergeben
+	fmt.Fprint(w, t.ExecuteTemplate(w, "imageSet.html", newImgList))
 }
 
 // Handler für die Erstellung einer neuen Basismotiv-Sammlung
@@ -187,57 +208,24 @@ func handlerCreateSet(w http.ResponseWriter, r *http.Request) {
 
 // Handler für die Darstellung einer Sammlung
 func handleShowSet(w http.ResponseWriter, r *http.Request) {
-	// Query auslesen, um aktuelle Sammlung herauszufinden
-	currentImgSet := r.URL.Query().Get("imgSet")
-
-	// Cookie für aktuell ausgewählte Sammlung anlegen
-	cookie := http.Cookie{Name: "currentImgSet", Value: currentImgSet}
-	http.SetCookie(w, &cookie)
-
-	fmt.Fprint(w, t.ExecuteTemplate(w, "imageSet.html", currentImgSet))
-
+	// Liste aller Bilder der aktuell ausgewählten Sammlung auslesen
+	newImgList := images.DisplaySet(r, w)
+	// Template für Motivsammlung aufrufen und bildliste übergeben
+	fmt.Fprint(w, t.ExecuteTemplate(w, "imageSet.html", newImgList))
 }
 
 func handleShowImg(w http.ResponseWriter, r *http.Request) {
-
-	// angemeldeten Nutzer von Cookie auslesen
-	cookie, _ := r.Cookie("currentUser")
-	user := cookie.Value
-
-	// aktuelle Motivsammlung aus Cookie auslesen
-	cookieSet, _ := r.Cookie("currentImgSet")
-	currentImageSet := cookieSet.Value
-
-	// Alle Bilder passend zum Nutzer und zur Sammlung auslesen
-
-	gridfs := dataB.GridFS("imageColl")
-	name := "gridFileName"
-	f, err := gridfs.Open(name)
-	if err != nil {
-		log.Printf("Failed to open %s: %v", name, err)
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
-		return
-	}
-	defer f.Close()
-
-	w.Header().Add("Content-Type", "image/jpeg")
-	_, err = io.Copy(w, f)
-
-	err = f.Close()
-
-	fmt.Println(err)
-
+	// Funktion zum auslesen und anzeigen eines einzelnen Bildes im Paket images aufrufen
+	images.ShowImg(r, w)
 }
 
 // Handler für den Logout des Nutzers
 func handleLogout(w http.ResponseWriter, r *http.Request) {
-
 	// Cookie des Nutzers löschen
-	cookie := http.Cookie{Name: "currentUser", MaxAge: -1}
-	http.SetCookie(w, &cookie)
+	usermanagement.DeleteCookie("currentUser", w)
+
 	// Cookie für ausgewählte Sammlung löschen
-	cookieSet := http.Cookie{Name: "currentImgSet", MaxAge: -1}
-	http.SetCookie(w, &cookieSet)
+	usermanagement.DeleteCookie("currentImgSet", w)
 
 	// Login-Seite schicken, damit Nutzer sich wieder anmelden kann
 	fmt.Fprint(w, t.ExecuteTemplate(w, "login.html", nil))

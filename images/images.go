@@ -4,9 +4,13 @@
 package images
 
 import (
+	"fmt"
+	"image/png"
 	"io"
+	"log"
 	"net/http"
 
+	"github.com/disintegration/imaging"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
@@ -20,6 +24,16 @@ type ImageSet struct {
 // struct für Liste von Basismotivsammlungen
 type ImageSetList struct {
 	ImgSets []ImageSet
+}
+
+type Image struct {
+	Filename string `bson:"filename"`
+	URL      string `bson:"url"`
+}
+
+type ImageList struct {
+	Images []Image
+	ImgSet string `bson:"set"`
 }
 
 // Collection für Basismotive
@@ -119,14 +133,103 @@ func GetAllImageSets(r *http.Request) ImageSetList {
 	return userImageSets
 }
 
-// func GetAllImages(r *http.Request) {
+// Funktion um ein einzelnes Bild aus der GridFS-Collektion herauszulesen
 
-// 	// // angemeldeten Nutzer von Cookie auslesen
-// 	// cookie, _ := r.Cookie("currentUser")
-// 	// user := cookie.Value
+func ShowImg(r *http.Request, w http.ResponseWriter) {
 
-// 	// // aktuelle Motivsammlung aus Cookie auslesen
-// 	// cookieSet, _ := r.Cookie("currentImgSet")
-// 	// currentImageSet := cookieSet.Value
+	// Dateinamen des Bildes aus request auslesen
+	filename := r.URL.Query().Get("filename")
+	// Bild in gridFS Collection suchen und öffnen
+	f, err := imageCollection.Open(filename)
 
-// }
+	if err != nil {
+		log.Printf("Failed to open %s: %v", filename, err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	// Thumbnail des Bildes erstellen
+	// Hierfür muss Bild erst in das passende Image-Typ umgewandelt werden
+	thumbnailSrc, _ := imaging.Decode(f)
+	thumb := imaging.Thumbnail(thumbnailSrc, 100, 100, imaging.CatmullRom)
+	png.Encode(w, thumb)
+	// // content-type herausfinden und header senden -- nicht nötig wenn thumbnail genutzt wird
+	// tmpSlice := strings.Split(filename, ".")
+	// fileExtension := tmpSlice[len(tmpSlice)-1] // das letzte Element
+	// fileExtension = strings.ToLower(fileExtension)
+	// var mimeType string
+	// switch fileExtension {
+	// case "jpeg", "jpg":
+	// 	mimeType = "image/jpeg"
+	// case "png":
+	// 	mimeType = "image/png"
+	// case "gif":
+	// 	mimeType = "image/gif"
+	// default:
+	// 	mimeType = "text/html"
+	// }
+	// w.Header().Add("Content-Type", mimeType)
+
+	// // bild senden
+	// _, err = io.Copy(w, f)
+	// // bilddatei in db wieder schließen
+	// err = f.Close()
+	// fmt.Println(err)
+}
+
+// Funktion zur Darstellung einer Motivsammlung
+func DisplaySet(r *http.Request, w http.ResponseWriter) ImageList {
+	var result *mgo.GridFile
+	newImgList := ImageList{}
+	currentImgSet := ""
+
+	// überprüfen ob cookie für aktuelle Sammlung bereits gesetzt ist
+	cookieExists := CheckCookie(r, "currentImgSet")
+
+	// ist kein cookie gesetzt, ist es der erste Aufruf der Seite
+	if cookieExists == "" {
+		// Query auslesen, um aktuelle Sammlung herauszufinden
+		currentImgSet = r.URL.Query().Get("imgSet")
+
+		// Cookie für aktuell ausgewählte Sammlung anlegen
+		cookie := http.Cookie{Name: "currentImgSet", Value: currentImgSet}
+		http.SetCookie(w, &cookie)
+	} else {
+		// ist bereits ein cookie gesetzt, ist dies der wiederholte Aufruf der Seite
+		cookie, _ := r.Cookie("currentImgSet")
+		currentImgSet = cookie.Value
+	}
+
+	// Alle Bilder passend zur aktuellen Sammlung auslesen
+	iter := imageCollection.Find(bson.M{"metadata.imgSet": currentImgSet}).Iter()
+
+	for imageCollection.OpenNext(iter, &result) {
+		// url zum abrufen jedes bilder in der src im template erstellen
+		imgURL := fmt.Sprintf("/showImg?filename=%s", result.Name())
+		// neues Struct für jedes Bild erstellen
+		newImage := Image{result.Name(), imgURL}
+		// Alle Bilder in eine BildListe hinzufügen
+		newImgList.Images = append(newImgList.Images, newImage)
+	}
+	newImgList.ImgSet = currentImgSet
+
+	return newImgList
+}
+
+// Funktion zum Prüfen, ob Cookie gesetzt ist
+func CheckCookie(r *http.Request, name string) string {
+	// leerer Cookie-wert
+	value := ""
+
+	// holt Cookie mit gewünschten Namen
+	cookie, _ := r.Cookie(name)
+
+	// wenn Cookie existiert wird der Wert gespeichert
+	if cookie != nil {
+		value = cookie.Value
+	}
+
+	// CookieWert zurückgeben
+	return value
+}

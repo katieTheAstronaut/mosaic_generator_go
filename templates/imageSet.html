@@ -1,11 +1,11 @@
 <!-- Template für die Darstellung einer Basismotivsammlung -->
-
+<input type="button" name="backToImages" id="backToImages" value="Zurück">
 <div id="newImageWrapper">
-        Sammlung {{.}} :
-        </br>
+    <h3>Sammlung {{.ImgSet}}</h3>
+    </br>
     <div class="title">Füge deiner Sammlung ein Bild hinzu:</div>
 
-    
+
     <form id="imageUploadForm" enctype="multipart/form-data">
         <fieldset>
             <input type="file" name="newImg" id="newImg" multiple>
@@ -19,8 +19,10 @@
 </div>
 
 <div id="showImages"> Deine Bisherigen Bilder:
+    </br>
+    {{ range .Images}}
+    <img alt="" src={{.URL}}>
+    </br>
+    {{end}}
 
-        <input type="button" name="show" id="show" value="Bild zeigen">
-
-        <img alt="" src="http://localhost:4242/showImg">
 </div>

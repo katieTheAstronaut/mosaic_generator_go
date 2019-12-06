@@ -5,6 +5,7 @@
 package usermanagement
 
 import (
+	"net/http"
 	"regexp"
 
 	"github.com/globalsign/mgo"
@@ -102,4 +103,16 @@ func isValidString(value string) (isValid bool) {
 	}
 
 	return true
+}
+
+// Funktion um cookie zu erstellen
+func CreateCookie(name string, value string, w http.ResponseWriter) {
+	cookie := http.Cookie{Name: name, Value: value}
+	http.SetCookie(w, &cookie)
+}
+
+// Funktion um cookie zu löschen
+func DeleteCookie(name string, w http.ResponseWriter) {
+	cookie := http.Cookie{Name: name, MaxAge: -1}
+	http.SetCookie(w, &cookie)
 }

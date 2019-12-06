@@ -202,6 +202,28 @@ function addJSforHome() {
 
 function addJSforImages() {
 
+    // Eventlistener für den Zurück-Button
+    $("backToMain").addEventListener("click", function () {
+
+        //------------------------------------------------
+        // XMLHttpRequest um neue Sammlung zu erstellen
+        //------------------------------------------------
+        var xhrBackToMain = new XMLHttpRequest();
+
+        // Nachdem neue Sammlung erstellt wurde, soll Template neu aufgerufen werden (mit aktualisierten Informationen)
+        xhrBackToMain.addEventListener('load', function () {
+            $("template").innerHTML = xhrBackToMain.responseText;
+            // JavaScript Funktionen für das nächste Template initialisieren.
+            addJSforHome();
+        });
+
+        // Anfrage definieren und mit FormValues absenden
+        xhrBackToMain.open('GET', 'http://localhost:4242/backToHome');
+        xhrBackToMain.send();
+
+    });
+
+
     // Eventlistener für den "Sammlung Erstellen"-Button
     $("newImgSetSubmit").addEventListener("click", function () {
 
@@ -258,6 +280,27 @@ function addJSforImages() {
 //#################################
 function addJSforImageSet() {
 
+  // Eventlistener für den Zurück-Button
+  $("backToImages").addEventListener("click", function () {
+
+    //------------------------------------------------
+    // XMLHttpRequest um neue Sammlung zu erstellen
+    //------------------------------------------------
+    var xhrBackToImages = new XMLHttpRequest();
+
+    // Nachdem neue Sammlung erstellt wurde, soll Template neu aufgerufen werden (mit aktualisierten Informationen)
+    xhrBackToImages.addEventListener('load', function () {
+        $("template").innerHTML = xhrBackToImages.responseText;
+        // JavaScript Funktionen für das nächste Template initialisieren.
+        addJSforImages();
+    });
+
+    // Anfrage definieren und mit FormValues absenden
+    xhrBackToImages.open('GET', 'http://localhost:4242/images');
+    xhrBackToImages.send();
+
+});
+
     // Eventlistener für den Bild hochladen - Button
     $("newImgSubmit").addEventListener("click", function () {
 
@@ -268,14 +311,14 @@ function addJSforImageSet() {
 
 
         // callback, um Template als Antwort zu erhalten und diese im html einzusetzen
-        // xhrPostImage.addEventListener('load', function () {
+        xhrPostImage.addEventListener('load', function () {
 
-        //    console.log(responseText);
-        //     // $("template").innerHTML = xhrPostImage.responseText;
 
-        //     // JavaScript Funktionen für das nächste Template initialisieren.
+            $("template").innerHTML = xhrPostImage.responseText;
 
-        // });
+            // JavaScript Funktionen für das nächste Template initialisieren.
+            addJSforImageSet();
+        });
 
         // Anfrage definieren und mit FormValues absenden
         xhrPostImage.open('POST', 'http://localhost:4242/uploadImage');
@@ -283,30 +326,6 @@ function addJSforImageSet() {
 
     });
 
-    // Eventlistener für den Bild hochladen - Button
-    $("show").addEventListener("click", function () {
-
-        //------------------------------------------------
-        // XMLHttpRequest um Bild hochzuladen
-        //------------------------------------------------
-        var xhrShowImage = new XMLHttpRequest();
-
-
-        // callback, um Template als Antwort zu erhalten und diese im html einzusetzen
-        xhrShowImage.addEventListener('load', function () {
-
-
-            $("template").innerHTML = xhrShowImage.responseText;
-
-            // JavaScript Funktionen für das nächste Template initialisieren.
-
-        });
-
-        // Anfrage definieren und mit FormValues absenden
-        xhrShowImage.open('GET', 'http://localhost:4242/showImg');
-        xhrShowImage.send();
-
-    });
 
 
 
