@@ -1,0 +1,28 @@
+<!-- Template für die Darstellung eines einzelnen Pools -->
+<input type="button" name="backToPools" id="backToPools" value="Zurück">
+
+
+<h3>Pool {{.Name}} </h3>
+
+<form id="imageUplForm" enctype="multipart/form-data">
+    <fieldset>
+        <input type="file" name="newImg" id="newImg" multiple>
+
+        </br></br>
+        <input type="button" name="newImageSubmit" id="newImageSubmit" value="Bild hochladen">
+    </fieldset>
+</form>
+
+
+<div id="deleteOriginalsWrapper">
+        <label>Hier kannst du die Originale deiner Kacheln löschen:</label>
+        <input type="button" name="deleteOriginals" id="deleteOriginals" value="Originale löschen">
+</div>
+
+<div id="showImages"> Deine bisherigen Kachelbilder im Pool:
+    </br>
+    {{ range .Images}}
+    <img alt="" src={{.URL}}>
+    {{end}}
+
+</div>

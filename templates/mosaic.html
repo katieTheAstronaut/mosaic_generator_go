@@ -1,0 +1,29 @@
+<h3>Hier kannst du Mosaike erzeugen</h3>
+
+<form id="mosaicForm">
+    <div id="imgSetWrapper">
+        <div>Wähle hier dein Basismotiv - so wird das Mosaik am Ende aussehen:</div>
+
+        {{range .ImgList.ImgLists}}
+        Sammlung: {{.Name}}
+        </br>
+        {{range .Images}}
+
+        <input type="radio" name="image" value="{{ .Filename}}"> <img alt="" src={{.URL}}>
+        {{end}}
+        </br>
+        {{end}}
+
+    </div>
+
+    <div id="mosaicPoolWrapper">
+        <div>Wähle hier deinen Pool - aus diesen Kacheln wird das Mosaik am Ende generiert:</div>
+        {{range .PoolList.Pools}}
+        <input type="radio" name="pool" value="{{ .PoolName}}"> {{ .PoolName}} - Pixelgröße: {{ .Size}}</br>
+        {{end}}
+    </div>
+
+    <input type="button" name="mosaicSubmit" id="mosaicSubmit" value="Mosaik erstellen">
+</form>
+
+<div id="mosaicPlaceholder"></div>

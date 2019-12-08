@@ -13,6 +13,8 @@ import (
 	// Eigene Packages
 
 	"./images"
+	"./mosaic"
+	"./pools"
 	"./usermanagement"
 
 	// Externe Packages
@@ -20,29 +22,18 @@ import (
 )
 
 // Externe Template-Dateien einlesen
-var t = template.Must(template.ParseFiles("templates/picx.html", "templates/register.html", "templates/login.html", "templates/home.html", "templates/images.html", "templates/imageSet.html"))
+var t = template.Must(template.ParseFiles("templates/picx.html",
+	"templates/register.html", "templates/login.html", "templates/home.html",
+	"templates/images.html", "templates/imageSet.html", "templates/pools.html",
+	"templates/singlePool.html", "templates/mosaic.html"))
 
 // deklariert Datenbank
 var dataB *mgo.Database
 
-// Structs für Basismotive und -Sammlungen
-type ImageSet struct {
-	SetName string `bson:"setName"`
-	User    string `bson:"user"`
-}
-
-type ImageSetList struct {
-	ImgSets []ImageSet
-}
-
-type Image struct {
-	Filename string `bson:"filename"`
-	URL      string `bson:"url"`
-}
-
-type ImageList struct {
-	Images []Image
-	ImgSet string `bson:"set"`
+// Struct für Mosaikinformationen
+type MosaicInfo struct {
+	ImgList  images.Images
+	PoolList pools.PoolList
 }
 
 //#################################
@@ -51,44 +42,47 @@ type ImageList struct {
 func main() {
 
 	// ----- Datenbankzeugs-----------------
-
 	// Verbindung zum Mongo-DBMS herstellen
 	dbSession, _ := mgo.Dial("localhost")
 	defer dbSession.Close()
-
 	// Datenbank wählen (bzw. neu erstellen, wenn noch nicht vorhanden)
 	dataB = dbSession.DB("HA19DB_kathrin_duerkop_630119")
-
-	// Collection für Nutzerverwaltung an usermanagement package übergeben
-	usermanagement.GetUserCollection(dataB.C("userColl"))
-
-	// Collections für Basismotive und Motivsammlungen an package images übergeben
+	// Collections für Nutzerverwaltung an usermanagement package übergeben
+	usermanagement.GetUserCollection(dataB.C("userColl"), dataB.C("poolsColl"), dataB.C("imgSetColl"), dataB.GridFS("imageColl"))
+	// Collections für Bilder und Motivsammlungen an package images übergeben
 	images.GetImgCollections(dataB.GridFS("imageColl"), dataB.C("imgSetColl"))
-
-	// ----Handler-------------------------
+	// Collection für Pools und Bilder an package pools übergeben
+	pools.GetCollections(dataB.GridFS("imageColl"), dataB.C("poolsColl"))
 
 	// File Server für statische Element (CSS, JS, ..) registrieren
 	http.Handle("/", http.FileServer(http.Dir("./static/")))
 
-	// Handler
-	http.HandleFunc("/picx", handlerPicx)                       // http://localhost:4242/picx
-	http.HandleFunc("/postNewUser", handlerNewUser)             // http://localhost:4242/postNewUser
-	http.HandleFunc("/getRegistration", handlerGetRegistration) // http://localhost:4242/getRegistration
-	http.HandleFunc("/getLogin", handlerGetLogin)               // http://localhost:4242/getLogin
-	http.HandleFunc("/home", handlerHome)                       // http://localhost:4242/home
-	http.HandleFunc("/backToHome", handlerBackToHome)           // http://localhost:4242/backToHome
-	http.HandleFunc("/images", handlerImages)                   // http://localhost:4242/images
-	http.HandleFunc("/uploadImage", handlerUploadImage)         // http://localhost:4242/uploadImage
-	http.HandleFunc("/createSet", handlerCreateSet)             // http://localhost:4242/createSet
-	http.HandleFunc("/showSet", handleShowSet)                  // http://localhost:4242/showSet
-	http.HandleFunc("/showImg", handleShowImg)                  // http://localhost:4242/showImg
-	http.HandleFunc("/logout", handleLogout)                    // http://localhost:4242/logout
+	// ----Funktions-Handler-------------------------
+	http.HandleFunc("/picx", handlerPicx)                           // http://localhost:4242/picx
+	http.HandleFunc("/postNewUser", handlerNewUser)                 // http://localhost:4242/postNewUser
+	http.HandleFunc("/getRegistration", handlerGetRegistration)     // http://localhost:4242/getRegistration
+	http.HandleFunc("/getLogin", handlerGetLogin)                   // http://localhost:4242/getLogin
+	http.HandleFunc("/home", handlerHome)                           // http://localhost:4242/home
+	http.HandleFunc("/backToHome", handlerBackToHome)               // http://localhost:4242/backToHome
+	http.HandleFunc("/images", handlerImages)                       // http://localhost:4242/images
+	http.HandleFunc("/uploadImage", handlerUploadImage)             // http://localhost:4242/uploadImage
+	http.HandleFunc("/createSet", handlerCreateSet)                 // http://localhost:4242/createSet
+	http.HandleFunc("/showSet", handleShowSet)                      // http://localhost:4242/showSet
+	http.HandleFunc("/showImg", handleShowImg)                      // http://localhost:4242/showImg
+	http.HandleFunc("/logout", handleLogout)                        // http://localhost:4242/logout
+	http.HandleFunc("/pools", handlerPools)                         // http://localhost:4242/pools
+	http.HandleFunc("/createPool", handlerCreatePool)               // http://localhost:4242/createPool
+	http.HandleFunc("/showPool", handlerShowPool)                   // http://localhost:4242/showPool
+	http.HandleFunc("/uploadImageToPool", handlerUploadImageToPool) // http://localhost:4242/uploadImageToPool
+	http.HandleFunc("/deleteOriginals", handlerDeleteOriginals)     // http://localhost:4242/deleteOriginals
+	http.HandleFunc("/deleteUser", handlerDeleteUser)               // http://localhost:4242/deleteUser
+	http.HandleFunc("/mosaic", handlerMosaic)                       // http://localhost:4242/mosaic
+	http.HandleFunc("/generateMosaic", handlerGenerateMosaic)       // http://localhost:4242/generateMosaic
 
 	err := http.ListenAndServe(":4242", nil)
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 //#################################
@@ -155,6 +149,7 @@ func handlerPicx(w http.ResponseWriter, r *http.Request) {
 	// Bei Neuaufruf der Seite alle Cookies löschen
 	usermanagement.DeleteCookie("currentUser", w)
 	usermanagement.DeleteCookie("currentImgSet", w)
+	usermanagement.DeleteCookie("currentPool", w)
 
 	// Base-Template mit integriertem Login-Bereich aufrufen
 	t.ExecuteTemplate(w, "picx.html", nil)
@@ -227,6 +222,91 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	// Cookie für ausgewählte Sammlung löschen
 	usermanagement.DeleteCookie("currentImgSet", w)
 
+	// Cookie für ausgewählten Pool löschen
+	usermanagement.DeleteCookie("currentPool", w)
+
 	// Login-Seite schicken, damit Nutzer sich wieder anmelden kann
 	fmt.Fprint(w, t.ExecuteTemplate(w, "login.html", nil))
+}
+
+// Handler für Aufruf der Pool-Übersichtsseite
+func handlerPools(w http.ResponseWriter, r *http.Request) {
+
+	// Falls Cookie eines Pools existiert, diesen löschen
+	cookieExists := pools.CheckCookie(r, "currentPool")
+	if cookieExists != "" {
+		usermanagement.DeleteCookie("currentPool", w)
+	}
+
+	// Alle Sammlungen des Nutzers holen, damit diese im Template dargestellt werden können
+	userPools := pools.GetAllPools(r)
+
+	fmt.Fprint(w, t.ExecuteTemplate(w, "pools.html", userPools))
+}
+
+// Handler für die Erstellung eines neuen Pools
+func handlerCreatePool(w http.ResponseWriter, r *http.Request) {
+	// // Ruft Funktion im package pools auf, um neuen Pool in der DB anzulegen
+	pools.CreatePool(r)
+	//aktualisierte Liste an Pools aufrufen
+	userPools := pools.GetAllPools(r)
+
+	fmt.Fprint(w, t.ExecuteTemplate(w, "pools.html", userPools))
+}
+
+// Handler für die Darstellung einer Sammlung
+func handlerShowPool(w http.ResponseWriter, r *http.Request) {
+	// Liste aller Bilder des aktuell ausgewählten Pools auslesen
+	newImgList := pools.DisplayPool(r, w)
+	// Template für Motivsammlung aufrufen und bildliste übergeben
+	fmt.Fprint(w, t.ExecuteTemplate(w, "singlePool.html", newImgList))
+}
+
+// Handler für den Upload von Kacheln
+func handlerUploadImageToPool(w http.ResponseWriter, r *http.Request) {
+	// Funktion aufrufen (package pools) um Kacheln zur DB hinzuzufügen
+	pools.AddImage(r)
+	//Aktuelle Liste an Basismotiven abrufen
+	newImgList := pools.DisplayPool(r, w)
+	// Template für Motivsammlung aufrufen und bildliste übergeben
+	fmt.Fprint(w, t.ExecuteTemplate(w, "singlePool.html", newImgList))
+}
+
+// Handler für das Löschen der Originale der Kacheln eines Pools
+func handlerDeleteOriginals(w http.ResponseWriter, r *http.Request) {
+	// Originale in dem Pool löschen
+	pools.DeleteOriginals(r)
+	// Liste aller Bilder des aktuell ausgewählten Pools auslesen
+	newImgList := pools.DisplayPool(r, w)
+	// Template für Motivsammlung aufrufen und bildliste übergeben
+	fmt.Fprint(w, t.ExecuteTemplate(w, "singlePool.html", newImgList))
+}
+
+// Handler für das Löschen eines Nutzers
+func handlerDeleteUser(w http.ResponseWriter, r *http.Request) {
+	usermanagement.DeleteUser(r, w)
+
+	// Login-Seite schicken
+	fmt.Fprint(w, t.ExecuteTemplate(w, "login.html", nil))
+
+}
+
+// Handler für Aufruf der Mosaik-Übersichtsseite
+func handlerMosaic(w http.ResponseWriter, r *http.Request) {
+
+	// Alle Sammlungen des Nutzers und die darin enthaltenen Bilder holen
+	mosaicBaseImages := images.GetAllImagesAndSets(r, w)
+
+	pools := pools.GetAllPools(r)
+
+	// Neues Struct für alle nötigen Infos für die Mosaikseite anlegen
+	mosaicInfo := MosaicInfo{mosaicBaseImages, pools}
+
+	fmt.Fprint(w, t.ExecuteTemplate(w, "mosaic.html", mosaicInfo))
+}
+
+// Handler für das Erstellen des Mosaiks
+func handlerGenerateMosaic(w http.ResponseWriter, r *http.Request) {
+	str := mosaic.GenerateMosaic()
+	fmt.Fprint(w, str)
 }

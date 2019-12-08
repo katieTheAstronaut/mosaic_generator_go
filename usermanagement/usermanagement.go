@@ -5,8 +5,10 @@
 package usermanagement
 
 import (
+	"log"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -18,12 +20,31 @@ type User struct {
 	Password string `bson:"password"`
 }
 
+// struct für Pool
+type Pool struct {
+	PoolName string `bson:"poolName"`
+	User     string `bson:"user"`
+	Size     int    `bson:"size"`
+}
+
+// struct für Basismotivsammlungen
+type ImageSet struct {
+	SetName string `bson:"setName"`
+	User    string `bson:"user"`
+}
+
 // Collection für Nutzerdaten erstellen
 var collectionUser *mgo.Collection
+var collectionPools *mgo.Collection
+var collectionImgSets *mgo.Collection
+var imageCollection *mgo.GridFS
 
 // Funktion um NutzerCollection aus Main Package zu holen
-func GetUserCollection(collection *mgo.Collection) {
+func GetUserCollection(collection *mgo.Collection, collectionPool *mgo.Collection, collectionSets *mgo.Collection, imageColl *mgo.GridFS) {
 	collectionUser = collection
+	collectionPools = collectionPool
+	collectionImgSets = collectionSets
+	imageCollection = imageColl
 }
 
 // Funktion um neuen Nutzer in der DB zu erstellen
@@ -115,4 +136,45 @@ func CreateCookie(name string, value string, w http.ResponseWriter) {
 func DeleteCookie(name string, w http.ResponseWriter) {
 	cookie := http.Cookie{Name: name, MaxAge: -1}
 	http.SetCookie(w, &cookie)
+}
+
+// Funktion um Nutzer und mit Nutzer verbundene Inhalte zu löschen
+func DeleteUser(r *http.Request, w http.ResponseWriter) {
+
+	// aktuell angemeldeten Nutzer aus Cookie abfragen
+	cookie, _ := r.Cookie("currentUser")
+	currentUser := cookie.Value
+	fileprefix := currentUser + "_"
+	var result *mgo.GridFile
+
+	//Alle Bilder des Nutzers in der GridFs-Collection löschen
+
+	iter := imageCollection.Find(nil).Iter()
+	for imageCollection.OpenNext(iter, &result) {
+		// wenn Dateiname mit Nutzername + _ beginnt, kann das Bild nur dem Nutzer gehören, da Nutzernamen unique sein müssen,
+		// auch wenn die hochgeladenen Datein ursprünglich den selben Filename hatten
+		if strings.HasPrefix(result.Name(), fileprefix) {
+			imageCollection.Remove(result.Name())
+		}
+	}
+
+	// Alle Pools des Nutzers löschen
+	_, err := collectionPools.RemoveAll(bson.M{"user": currentUser})
+
+	// Alle Motivsammlungen des Nutzers löschen
+	_, err = collectionImgSets.RemoveAll(bson.M{"user": currentUser})
+
+	// Nutzer aus Nutzercollection löschen
+	err = collectionUser.Remove(bson.M{"username": currentUser})
+
+	// Fehlerbehandlung
+	if err != nil {
+		log.Printf("User %s could not be deleted :%v", currentUser, err)
+		return
+	}
+
+	// Cookies alle löschen
+	// Cookie des Nutzers löschen
+	DeleteCookie("currentUser", w)
+
 }

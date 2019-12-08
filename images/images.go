@@ -33,11 +33,17 @@ type Image struct {
 
 type ImageList struct {
 	Images []Image
-	ImgSet string `bson:"set"`
+	Name   string `bson:"name"`
 }
 
-// Collection für Basismotive
+type Images struct {
+	ImgLists []ImageList
+}
+
+// Collection für Bilder
 var imageCollection *mgo.GridFS
+
+// Collection für Sammlungen
 var imageSetCollection *mgo.Collection
 
 // Collection für Basismotive von main package holen
@@ -84,6 +90,9 @@ func AddImage(r *http.Request) {
 
 	// aktuell ausgewählte Sammlung aus Cookie auslesen:
 	var currentImgSet, _ = r.Cookie("currentImgSet")
+	// angemeldeten Nutzer von Cookie auslesen
+	cookie, _ := r.Cookie("currentUser")
+	user := cookie.Value
 
 	if err == nil { // => alles ok
 		formdataZeiger := r.MultipartForm
@@ -96,11 +105,11 @@ func AddImage(r *http.Request) {
 				uplFile, _ := files[i].Open()
 				defer uplFile.Close()
 
-				// grid-file mit diesem Namen erzeugen:
-				gridFile, _ := imageCollection.Create(files[i].Filename)
+				// bild neu benennen mit nutzername am Anfang
+				newFileName := user + "_" + files[i].Filename
 
-				newID := bson.NewObjectId()
-				gridFile.SetId(newID)
+				// grid-file mit diesem Namen erzeugen:
+				gridFile, _ := imageCollection.Create(newFileName)
 				// 	// Zusatzinformationen in den Metadaten festhalten
 				// 	// Jedes Bild hat eine zugehörige Sammlung
 				gridFile.SetMeta(bson.M{"imgSet": currentImgSet.Value})
@@ -180,7 +189,6 @@ func ShowImg(r *http.Request, w http.ResponseWriter) {
 
 // Funktion zur Darstellung einer Motivsammlung
 func DisplaySet(r *http.Request, w http.ResponseWriter) ImageList {
-	var result *mgo.GridFile
 	newImgList := ImageList{}
 	currentImgSet := ""
 
@@ -200,19 +208,8 @@ func DisplaySet(r *http.Request, w http.ResponseWriter) ImageList {
 		cookie, _ := r.Cookie("currentImgSet")
 		currentImgSet = cookie.Value
 	}
-
-	// Alle Bilder passend zur aktuellen Sammlung auslesen
-	iter := imageCollection.Find(bson.M{"metadata.imgSet": currentImgSet}).Iter()
-
-	for imageCollection.OpenNext(iter, &result) {
-		// url zum abrufen jedes bilder in der src im template erstellen
-		imgURL := fmt.Sprintf("/showImg?filename=%s", result.Name())
-		// neues Struct für jedes Bild erstellen
-		newImage := Image{result.Name(), imgURL}
-		// Alle Bilder in eine BildListe hinzufügen
-		newImgList.Images = append(newImgList.Images, newImage)
-	}
-	newImgList.ImgSet = currentImgSet
+	// Funktion aufrufen zum erstellen der Liste aller Bilder der Sammlung
+	newImgList = createImgList(r, w, currentImgSet)
 
 	return newImgList
 }
@@ -232,4 +229,38 @@ func CheckCookie(r *http.Request, name string) string {
 
 	// CookieWert zurückgeben
 	return value
+}
+
+// Funktionen zum Abrufen aller Bilder des Nutzers
+func GetAllImagesAndSets(r *http.Request, w http.ResponseWriter) Images {
+	newImages := Images{}
+
+	imgSetList := GetAllImageSets(r)
+	for _, imageSet := range imgSetList.ImgSets {
+		imagesOfSingleSet := createImgList(r, w, imageSet.SetName)
+		newImages.ImgLists = append(newImages.ImgLists, imagesOfSingleSet)
+	}
+
+	return newImages
+}
+
+// Funktion zum Erstellen der Liste aller Bilder
+func createImgList(r *http.Request, w http.ResponseWriter, currentImgSet string) ImageList {
+	var result *mgo.GridFile
+	newImgList := ImageList{}
+
+	// Alle Bilder passend zur aktuellen Sammlung auslesen
+	iter := imageCollection.Find(bson.M{"metadata.imgSet": currentImgSet}).Iter()
+
+	for imageCollection.OpenNext(iter, &result) {
+		// url zum abrufen jedes bilder in der src im template erstellen
+		imgURL := fmt.Sprintf("/showImg?filename=%s", result.Name())
+		// neues Struct für jedes Bild erstellen
+		newImage := Image{result.Name(), imgURL}
+		// Alle Bilder in eine BildListe hinzufügen
+		newImgList.Images = append(newImgList.Images, newImage)
+	}
+	newImgList.Name = currentImgSet
+
+	return newImgList
 }
