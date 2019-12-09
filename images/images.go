@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -40,6 +41,16 @@ type ImageList struct {
 
 type Images struct {
 	ImgLists []ImageList
+}
+
+type Infos struct {
+	Name       string  `bson:"name"`
+	Width      int     `bson:"width"`
+	Height     int     `bson:"height"`
+	Brightness float64 `bson:"brightness"`
+	R          float64 `bson:"r"`
+	G          float64 `bson:"g"`
+	B          float64 `bson:"b"`
 }
 
 // Collection für Bilder
@@ -296,4 +307,67 @@ func Resize(filename string, size int, r *http.Request, user string) {
 	err = gridFile.Close()
 
 	err = f.Close()
+}
+
+func GetImageInfo(filename string) Infos {
+
+	width, height := GetSizeOfImg(filename)
+	brightness, r, g, b := ComputeBrightnessOfImg(filename, width, height)
+
+	newInfo := Infos{
+		filename, width, height, brightness, r, g, b}
+
+	return newInfo
+}
+
+func GetSizeOfImg(filename string) (int, int) {
+
+	f, _ := imageCollection.Open(filename)
+	// Bild aus GridFS zu imaging.Image umwandeln
+	newImg, _ := imaging.Decode(f)
+	width := newImg.Bounds().Dx()
+	height := newImg.Bounds().Dy()
+
+	return width, height
+}
+
+func ComputeBrightnessOfImg(filename string, width int, height int) (float64, float64, float64, float64) {
+
+	// Gewünschtes Bild öffnen
+	img, _ := imageCollection.Open(filename)
+	decodedImg, _ := imaging.Decode(img)
+
+	pixels := float64(width * height)
+
+	// R-,G-,B-Mittelwerte auf 0 setzen
+	rMid := float64(0)
+	gMid := float64(0)
+	bMid := float64(0)
+
+	// Über gesamte Kachel iterieren und R-,G-,B-Werte addieren
+	for i := 1; i < width; i++ {
+		for j := 1; j < height; j++ {
+			r, g, b, _ := decodedImg.At(i, j).RGBA()
+
+			realR := float64(r / 257)
+			realG := float64(g / 257)
+			realB := float64(b / 257)
+
+			rMid = rMid + realR
+			gMid = gMid + realG
+			bMid = bMid + realB
+
+		}
+	}
+	// RGB-Werte durch Pixel teilen um Mittelwerte zu erhalten
+	rMid = rMid / pixels
+	gMid = gMid / pixels
+	bMid = bMid / pixels
+
+	// Helligkeit auf Basis des Mittelwertes auslesen
+	brightness := math.Sqrt(rMid*rMid) + math.Sqrt(gMid*gMid) + math.Sqrt(bMid*bMid)
+
+	img.Close()
+
+	return brightness, rMid, gMid, bMid
 }

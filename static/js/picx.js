@@ -367,6 +367,35 @@ function addJSforImageSet() {
         xhrPostImage.send(new FormData($('imageUploadForm')));
     });
 
+    // Alle dargestellten Bilder der Sammlung abfragen
+    var setImages = document.getElementsByClassName("imageClicked");
+    // Allen Bildern einen Eventlistener geben, sodass bei Click auf ein Bild die 
+    //Bildinformationen abgefragt und dargestellt werden
+    for (i = 0; i < setImages.length; i++) {
+        setImages[i].addEventListener("click", function () {
+
+            //------------------------------------------------
+            // XMLHttpRequest um Sammlung darzustellen
+            //------------------------------------------------
+            var xhrGetInfo = new XMLHttpRequest();
+
+            // callback, um Template als Antwort zu erhalten und diese im html einzusetzen
+            xhrGetInfo.addEventListener('load', function () {
+                $("imgInfos").innerHTML = xhrGetInfo.responseText;
+                // JavaScript Funktionen für das nächste Template initialisieren.
+                addJSforImageSet();
+            });
+            // Anfrage definieren und Sammlungsname als Query mit absenden
+            var img = this.getAttribute('alt'); // Wert des aktuell gedrückten Buttons auslesen = Sammlungsname
+           
+            xhrGetInfo.open('GET', `http://localhost:4242/getInfo?img=${img}`);
+            xhrGetInfo.send();
+
+        });
+    }
+
+
+
 }
 
 

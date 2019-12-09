@@ -11,7 +11,9 @@ import (
 	"image/png"
 	"log"
 	"math"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/disintegration/imaging"
 	"github.com/globalsign/mgo"
@@ -24,9 +26,11 @@ type Mosaic struct {
 
 // struct für Pool
 type Pool struct {
-	PoolName string `bson:"poolName"`
-	User     string `bson:"user"`
-	Size     int    `bson:"size"`
+	PoolName   string    `bson:"poolName"`
+	User       string    `bson:"user"`
+	Size       int       `bson:"size"`
+	Filenames  []string  `bson:"filenames"`
+	Brightness []float64 `bson:"brightness"`
 }
 
 // Collection für Bilder
@@ -43,16 +47,18 @@ func GetCollections(gridFS *mgo.GridFS, poolColl *mgo.Collection) {
 }
 
 // Funktion zum Generieren eines neuen Mosaics mit dem übergebenem Basismotiv und Pool
-func GenerateMosaic(baseImg string, pool string) Mosaic {
+func GenerateMosaic(baseImg string, pool string, r *http.Request) Mosaic {
 
 	// Mosaic erstellen
 	mosaic := CreateNewImg(baseImg, pool)
 
+	// Neuen Dateinamen erstellen
+	mosaicName := GetRandomName(r, "mosaic")
 	// Mosaic in DB speichern
-	filename := UploadMosaic(mosaic)
+	UploadMosaic(mosaic, mosaicName)
 
 	// URL zum anzeigen des Mosaics erstellen und in ein Struct des Typen Mosaic speichern
-	url := fmt.Sprintf("/showMosaic?filename=%s", filename)
+	url := fmt.Sprintf("/showMosaic?filename=%s", mosaicName)
 	newMosaic := Mosaic{url}
 
 	// Mosaik-Struct zurückliefern
@@ -75,40 +81,42 @@ func CreateNewImg(baseImg string, pool string) *image.NRGBA {
 	width := decodedImg.Bounds().Dx()
 	height := decodedImg.Bounds().Dy()
 
+	// Größe des Mosaiks berechnen
 	widthMosaic := width * poolSize
 	heightMosaic := height * poolSize
 
 	// Neues, leeres Bild erstellen
-	newImage := imaging.New(widthMosaic, heightMosaic, color.NRGBA{237, 250, 250, 1})
+	newImage := imaging.New(widthMosaic, heightMosaic, color.NRGBA{0, 0, 0, 1})
 
-	// Bild für den gewünschten Pixel holen
-	coverImg, _ := imageCollection.Open("aa_px_20_aa_david-kovalenko-G85VuTpw6jg-unsplash.jpg")
-	gridDecoded, _ := imaging.Decode(coverImg)
-
-	tile := imaging.Fill(gridDecoded, poolSize, poolSize, imaging.Center, imaging.Lanczos)
+	//Helligkeits-Slice des aktuellen Pools abfragen
+	brightnessSlice := thisPool.Brightness
+	// Zugehörigen Filename-Slice des aktuellen Pools abfragen
+	filesSlice := thisPool.Filenames
 
 	// Bild an spezifische Stelle über leeres Bild legen
-	for i := 1; i < widthMosaic/10; i += poolSize {
-		for j := 1; j < heightMosaic/10; j += poolSize {
+	for i := 0; i < width; i++ {
+		for j := 0; j < height; j++ {
 			// Helligkeit des Pixels ausrechnen
-			// brightness := ComputeBrightness(baseImg, i, j)
+			brightness := ComputeBrightness(baseImg, i, j)
+
+			// Kachel mit ähnlichster Helligkeit aus Pool suchen
+			closest := getClosestBrightness(brightness, brightnessSlice, filesSlice)
+			closestTile, _ := imageCollection.Open(closest)
+			decodedTile, _ := imaging.Decode(closestTile)
+			tile := imaging.Fill(decodedTile, poolSize, poolSize, imaging.Center, imaging.Lanczos)
 
 			// passende Kachel an der Stelle einsetzen
-			newImage = imaging.Paste(newImage, tile, image.Pt(i, j))
+			newImage = imaging.Paste(newImage, tile, image.Pt(i*poolSize, j*poolSize))
+			closestTile.Close()
 		}
 	}
-
-	// newImage = imaging.Paste(newImage, tile, image.Pt(20, 1))
-
 	f.Close()
-
 	return newImage
 }
 
 // Funktion um Mosaic in DB hochzuladen
-func UploadMosaic(image *image.NRGBA) string {
+func UploadMosaic(image *image.NRGBA, filename string) {
 
-	filename := "mosaic28"
 	gridFile, _ := imageCollection.Create(filename)
 
 	// 	// Zusatzinformationen in den Metadaten festhalten
@@ -119,8 +127,6 @@ func UploadMosaic(image *image.NRGBA) string {
 	png.Encode(gridFile, image)
 
 	_ = gridFile.Close()
-
-	return filename
 }
 
 // Funktion zum Darstellen eines Mosaic-Bildes
@@ -142,8 +148,8 @@ func ShowMosaic(r *http.Request, w http.ResponseWriter) {
 	// Thumbnail des Bildes erstellen
 	// Hierfür muss Bild erst in das passende Image-Typ umgewandelt werden
 	img, _ := imaging.Decode(f)
-	// thumb := imaging.Thumbnail(img, 100, 100, imaging.CatmullRom)
-	png.Encode(w, img)
+	thumb := imaging.Thumbnail(img, 200, 200, imaging.CatmullRom)
+	png.Encode(w, thumb)
 
 }
 
@@ -165,4 +171,46 @@ func ComputeBrightness(filename string, x int, y int) float64 {
 	brightness := math.Abs(math.Sqrt(realR*realR) + math.Sqrt(realG*realG) + math.Sqrt(realB*realB))
 
 	return brightness
+}
+
+// Funktion um ähnlichste Helligkeit zu einem Pixel in einem Pool zu finden
+func getClosestBrightness(brightness float64, brightnessPool []float64, filePool []string) string {
+	minimum := float64(1000)
+	var closest = ""
+	// Alle Helligkeiten im Pool durchgehen und jeweils die ähnlichste Helligkeit speichern
+	for i := range brightnessPool {
+		difference := math.Abs(brightness - brightnessPool[i])
+		if difference < minimum {
+			minimum = difference
+			closest = filePool[i]
+		}
+	}
+	return closest
+}
+
+// Funktion um zufälligen Dateinamen zu erstellen
+func GetRandomName(r *http.Request, filetype string) string {
+	// angemeldeten Nutzer von Cookie auslesen
+	cookie, _ := r.Cookie("currentUser")
+	user := cookie.Value
+
+	// zufälligen String erstellen
+	randomString := getRandomString(5)
+
+	// Dateiname erstellen
+	filename := user + "_" + filetype + "_" + randomString
+	return filename
+}
+
+var seededRand *rand.Rand = rand.New(
+	rand.NewSource(time.Now().UnixNano()))
+
+// Funktion um zufällige Zeichenkette zu erstellen
+func getRandomString(length int) string {
+	characters := "abcdefghijklmnopqrstuvwxyz" + "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = characters[seededRand.Intn(len(characters))]
+	}
+	return string(b)
 }

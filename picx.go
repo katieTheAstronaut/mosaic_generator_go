@@ -25,7 +25,8 @@ import (
 var t = template.Must(template.ParseFiles("templates/picx.html",
 	"templates/register.html", "templates/login.html", "templates/home.html",
 	"templates/images.html", "templates/imageSet.html", "templates/pools.html",
-	"templates/singlePool.html", "templates/mosaic.html", "templates/mosaicDisplay.html"))
+	"templates/singlePool.html", "templates/mosaic.html", "templates/mosaicDisplay.html",
+	"templates/imageInfo.html"))
 
 // deklariert Datenbank
 var dataB *mgo.Database
@@ -81,6 +82,7 @@ func main() {
 	http.HandleFunc("/mosaic", handlerMosaic)                       // http://localhost:4242/mosaic
 	http.HandleFunc("/generateMosaic", handlerGenerateMosaic)       // http://localhost:4242/generateMosaic
 	http.HandleFunc("/showMosaic", handlerShowMosaic)               // http://localhost:4242/showMosaic
+	http.HandleFunc("/getInfo", handlerGetInfo)                     // http://localhost:4242/getInfo
 
 	err := http.ListenAndServe(":4242", nil)
 	if err != nil {
@@ -315,12 +317,20 @@ func handlerGenerateMosaic(w http.ResponseWriter, r *http.Request) {
 	baseImage := r.PostFormValue("image")
 	pool := r.PostFormValue("pool")
 
-	newMosaic := mosaic.GenerateMosaic(baseImage, pool)
-	fmt.Println(newMosaic)
+	newMosaic := mosaic.GenerateMosaic(baseImage, pool, r)
 	fmt.Fprint(w, t.ExecuteTemplate(w, "mosaicDisplay.html", newMosaic))
 }
 
 func handlerShowMosaic(w http.ResponseWriter, r *http.Request) {
 	// Funktion zum auslesen und anzeigen eines einzelnen Bildes im Paket images aufrufen
 	mosaic.ShowMosaic(r, w)
+}
+
+func handlerGetInfo(w http.ResponseWriter, r *http.Request) {
+	// Funktion zum Abfragen der Bildinformationen eines übergebenen Bildes
+	image := r.URL.Query().Get("img")
+
+	imageInfo := images.GetImageInfo(image)
+
+	fmt.Fprint(w, t.ExecuteTemplate(w, "imageInfo.html", imageInfo))
 }

@@ -21,8 +21,8 @@
 <div id="showImages"> Deine Bisherigen Bilder:
     </br>
     {{ range .Images}}
-    <img alt="" src={{.URL}}>
-    </br>
+    <img class="imageClicked" alt="{{ .Filename}}" src={{.URL}}>
     {{end}}
-
+</br>
+<div id="imgInfos"></div>
 </div>
