@@ -513,6 +513,9 @@ function addJSforSinglePool() {
 //#################################
 function addJSforMosaic() {
 
+    // Eventlistener für den Zurück-Button setzen
+    backToMain();
+
     // Eventlistener für den Mosaik-Erstellen-Button
     $("mosaicSubmit").addEventListener("click", function () {
 

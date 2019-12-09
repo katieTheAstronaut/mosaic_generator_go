@@ -5,10 +5,12 @@ package images
 
 import (
 	"fmt"
+	"image"
 	"image/png"
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/disintegration/imaging"
 	"github.com/globalsign/mgo"
@@ -114,10 +116,17 @@ func AddImage(r *http.Request) {
 				// 	// Jedes Bild hat eine zugehörige Sammlung
 				gridFile.SetMeta(bson.M{"imgSet": currentImgSet.Value})
 
+				// Bild verkleinern auf ca. 80 Pixel auf der längsten Seite
 				// in GridFSkopieren:
 				_, err = io.Copy(gridFile, uplFile)
 
 				err = gridFile.Close()
+				// Jedes Bild wird automatisch auf etwa 80Pixel Breihe oder Höhe (Verhältnis bleibt erhalten) runterskaliert
+				Resize(newFileName, 80, r, user)
+
+				// Original löschen (da meist viel zu groß)
+				imageCollection.Remove(newFileName)
+
 			}
 		}
 	}
@@ -163,28 +172,7 @@ func ShowImg(r *http.Request, w http.ResponseWriter) {
 	thumbnailSrc, _ := imaging.Decode(f)
 	thumb := imaging.Thumbnail(thumbnailSrc, 100, 100, imaging.CatmullRom)
 	png.Encode(w, thumb)
-	// // content-type herausfinden und header senden -- nicht nötig wenn thumbnail genutzt wird
-	// tmpSlice := strings.Split(filename, ".")
-	// fileExtension := tmpSlice[len(tmpSlice)-1] // das letzte Element
-	// fileExtension = strings.ToLower(fileExtension)
-	// var mimeType string
-	// switch fileExtension {
-	// case "jpeg", "jpg":
-	// 	mimeType = "image/jpeg"
-	// case "png":
-	// 	mimeType = "image/png"
-	// case "gif":
-	// 	mimeType = "image/gif"
-	// default:
-	// 	mimeType = "text/html"
-	// }
-	// w.Header().Add("Content-Type", mimeType)
 
-	// // bild senden
-	// _, err = io.Copy(w, f)
-	// // bilddatei in db wieder schließen
-	// err = f.Close()
-	// fmt.Println(err)
 }
 
 // Funktion zur Darstellung einer Motivsammlung
@@ -263,4 +251,49 @@ func createImgList(r *http.Request, w http.ResponseWriter, currentImgSet string)
 	newImgList.Name = currentImgSet
 
 	return newImgList
+}
+
+// Funktion zum Ausschneiden und skalieren der Originalbilder zu Kacheln der richtigen Größe
+func Resize(filename string, size int, r *http.Request, user string) {
+	var resizedImg image.Image
+
+	// aktuelle Sammlung abrufen
+	var currentImgSet, _ = r.Cookie("currentImgSet")
+
+	// Bild in gridFS Collection suchen und öffnen
+	f, err := imageCollection.Open(filename)
+
+	if err != nil {
+		log.Printf("Failed to open %s: %v", filename, err)
+		return
+	}
+	defer f.Close()
+
+	// Bild aus GridFS zu imaging.Image umwandeln
+	newImg, _ := imaging.Decode(f)
+	// image duplizieren
+	clonedImg := imaging.Clone(newImg)
+
+	// wenn Bild breiter als höher ist:
+	if clonedImg.Bounds().Dx() > clonedImg.Bounds().Dy() {
+		// Bild skalieren: Höhe ist übergebene Größe
+		resizedImg = imaging.Resize(clonedImg, 0, size, imaging.Box)
+	} else {
+		// Bild skalieren: Breite ist übergebene Größe
+		resizedImg = imaging.Resize(clonedImg, size, 0, imaging.Box)
+	}
+
+	// grid-file mit diesem Namen erzeugen:
+	gridFile, _ := imageCollection.Create(user + "_" + "px_" + strconv.Itoa(size) + "_" + filename)
+
+	// 	// Zusatzinformationen in den Metadaten festhalten
+	// 	// Jedes Bild hat eine zugehörige Sammlung
+	gridFile.SetMeta(bson.M{"imgSet": currentImgSet.Value})
+
+	// in GridFSkopieren:
+	png.Encode(gridFile, resizedImg)
+
+	err = gridFile.Close()
+
+	err = f.Close()
 }

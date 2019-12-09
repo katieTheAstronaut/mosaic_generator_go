@@ -25,7 +25,7 @@ import (
 var t = template.Must(template.ParseFiles("templates/picx.html",
 	"templates/register.html", "templates/login.html", "templates/home.html",
 	"templates/images.html", "templates/imageSet.html", "templates/pools.html",
-	"templates/singlePool.html", "templates/mosaic.html"))
+	"templates/singlePool.html", "templates/mosaic.html", "templates/mosaicDisplay.html"))
 
 // deklariert Datenbank
 var dataB *mgo.Database
@@ -53,6 +53,8 @@ func main() {
 	images.GetImgCollections(dataB.GridFS("imageColl"), dataB.C("imgSetColl"))
 	// Collection für Pools und Bilder an package pools übergeben
 	pools.GetCollections(dataB.GridFS("imageColl"), dataB.C("poolsColl"))
+	// Collection für Bilder an package mosaic übergeben
+	mosaic.GetCollections(dataB.GridFS("imageColl"), dataB.C("poolsColl"))
 
 	// File Server für statische Element (CSS, JS, ..) registrieren
 	http.Handle("/", http.FileServer(http.Dir("./static/")))
@@ -78,6 +80,7 @@ func main() {
 	http.HandleFunc("/deleteUser", handlerDeleteUser)               // http://localhost:4242/deleteUser
 	http.HandleFunc("/mosaic", handlerMosaic)                       // http://localhost:4242/mosaic
 	http.HandleFunc("/generateMosaic", handlerGenerateMosaic)       // http://localhost:4242/generateMosaic
+	http.HandleFunc("/showMosaic", handlerShowMosaic)               // http://localhost:4242/showMosaic
 
 	err := http.ListenAndServe(":4242", nil)
 	if err != nil {
@@ -307,6 +310,17 @@ func handlerMosaic(w http.ResponseWriter, r *http.Request) {
 
 // Handler für das Erstellen des Mosaiks
 func handlerGenerateMosaic(w http.ResponseWriter, r *http.Request) {
-	str := mosaic.GenerateMosaic()
-	fmt.Fprint(w, str)
+
+	// Motivbild und Pool aus Form auslesen
+	baseImage := r.PostFormValue("image")
+	pool := r.PostFormValue("pool")
+
+	newMosaic := mosaic.GenerateMosaic(baseImage, pool)
+	fmt.Println(newMosaic)
+	fmt.Fprint(w, t.ExecuteTemplate(w, "mosaicDisplay.html", newMosaic))
+}
+
+func handlerShowMosaic(w http.ResponseWriter, r *http.Request) {
+	// Funktion zum auslesen und anzeigen eines einzelnen Bildes im Paket images aufrufen
+	mosaic.ShowMosaic(r, w)
 }

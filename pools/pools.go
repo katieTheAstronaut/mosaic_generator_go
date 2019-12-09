@@ -8,7 +8,7 @@ import (
 	"image"
 	"image/png"
 	"io"
-	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,9 +20,11 @@ import (
 
 // struct für Pool
 type Pool struct {
-	PoolName string `bson:"poolName"`
-	User     string `bson:"user"`
-	Size     int    `bson:"size"`
+	PoolName   string    `bson:"poolName"`
+	User       string    `bson:"user"`
+	Size       int       `bson:"size"`
+	Filenames  []string  `bson:"filenames"`
+	Brightness []float64 `bson:"brightness"`
 }
 
 // struct für Liste von Pools
@@ -79,7 +81,7 @@ func CreatePool(r *http.Request) {
 	// Falls kein Duplikat entstehen würde, Motivsammlung anlegen
 	if !poolExists {
 		// Neue Sammlung anlegen
-		newPool := Pool{poolName, user, poolSize}
+		newPool := Pool{poolName, user, poolSize, []string{}, []float64{}}
 		poolCollection.Insert(newPool)
 	}
 
@@ -201,7 +203,17 @@ func AddImage(r *http.Request) {
 				_, err = io.Copy(gridFile, uplFile)
 
 				err = gridFile.Close()
-				CropAndScale(newFileName, currentSize, r, user)
+				// Bild auf geringere Pixelgröße verkleinern
+				croppedFileName := CropAndScale(newFileName, currentSize, r, user)
+
+				// Kachelhelligkeit auslesen
+				brightness := ComputeBrightnessOfImg(croppedFileName, currentSize)
+				// Bild und Kachel-Helligkeit in Slice speichern
+
+				curPool.Filenames = append(curPool.Filenames, croppedFileName)
+				curPool.Brightness = append(curPool.Brightness, brightness)
+				poolCollection.Update(bson.M{"poolName": currentPool.Value}, curPool)
+				poolCollection.Update(bson.M{"poolName": currentPool.Value}, curPool)
 
 			}
 		}
@@ -210,20 +222,14 @@ func AddImage(r *http.Request) {
 }
 
 // Funktion zum Ausschneiden und skalieren der Originalbilder zu Kacheln der richtigen Größe
-func CropAndScale(filename string, size int, r *http.Request, user string) {
+func CropAndScale(filename string, size int, r *http.Request, user string) string {
 	var resizedImg image.Image
 
 	// aktuellen pool abrufen
 	var currentPool, _ = r.Cookie("currentPool")
 
 	// Bild in gridFS Collection suchen und öffnen
-	f, err := imageCollection.Open(filename)
-
-	if err != nil {
-		log.Printf("Failed to open %s: %v", filename, err)
-		return
-	}
-	defer f.Close()
+	f, _ := imageCollection.Open(filename)
 
 	// Bild aus GridFS zu imaging.Image umwandeln
 	newImg, _ := imaging.Decode(f)
@@ -240,9 +246,9 @@ func CropAndScale(filename string, size int, r *http.Request, user string) {
 	}
 	// skaliertes Bild quadratisch zuschneiden
 	croppedImg := imaging.CropCenter(resizedImg, size, size)
-
+	croppedFilename := user + "_" + "px_" + strconv.Itoa(size) + "_" + filename
 	// grid-file mit diesem Namen erzeugen:
-	gridFile, _ := imageCollection.Create(user + "_" + "px_" + strconv.Itoa(size) + "_" + filename)
+	gridFile, _ := imageCollection.Create(croppedFilename)
 
 	// 	// Zusatzinformationen in den Metadaten festhalten
 	// 	// Jedes Bild hat eine zugehörige Sammlung
@@ -251,18 +257,22 @@ func CropAndScale(filename string, size int, r *http.Request, user string) {
 	// in GridFSkopieren:
 	png.Encode(gridFile, croppedImg)
 
-	err = gridFile.Close()
+	gridFile.Close()
 
-	err = f.Close()
+	f.Close()
+
+	return croppedFilename
 }
 
 // Funktion zum Löschen der Originale von Kacheln
 func DeleteOriginals(r *http.Request) {
 	var result *mgo.GridFile
+	user := getCurrentUser(r)
 
 	// aktuellen pool abrufen
 	var cookie, _ = r.Cookie("currentPool")
 	currentPool := cookie.Value
+	prefix := user + "_" + "px"
 
 	// Alle Poolkacheln auslesen
 	iter := imageCollection.Find(bson.M{"metadata.pool": currentPool}).Iter()
@@ -270,10 +280,56 @@ func DeleteOriginals(r *http.Request) {
 	for imageCollection.OpenNext(iter, &result) {
 
 		// wenn Dateiname mit "px" beginnt, ist es die verkleinerte Version, alternativ ist es das Original
-		if !strings.HasPrefix(result.Name(), "px") {
+		if !strings.HasPrefix(result.Name(), prefix) {
 			// Original löschen
 			imageCollection.Remove(result.Name())
 		}
 	}
 
+}
+
+// Funktion um aktuellen Nutzer auszulesen
+func getCurrentUser(r *http.Request) string {
+	// angemeldeten Nutzer von Cookie auslesen
+	cookie, _ := r.Cookie("currentUser")
+	user := cookie.Value
+	return user
+}
+
+// Funktion um Helligkeit eines ganzen Bildes zu berechnen
+func ComputeBrightnessOfImg(filename string, poolSize int) float64 {
+
+	// Gewünschtes Bild öffnen
+	img, _ := imageCollection.Open(filename)
+	decodedImg, _ := imaging.Decode(img)
+
+	poolsize := float64(poolSize)
+	// R-,G-,B-Mittelwerte auf 0 setzen
+	rMid := float64(0)
+	gMid := float64(0)
+	bMid := float64(0)
+
+	// Über gesamte Kachel iterieren und R-,G-,B-Werte addieren
+	for i := 1; i < poolSize; i++ {
+		for j := 1; j < poolSize; j++ {
+			r, g, b, _ := decodedImg.At(i, j).RGBA()
+
+			realR := float64(r / 257)
+			realG := float64(g / 257)
+			realB := float64(b / 257)
+
+			rMid = rMid + realR
+			gMid = gMid + realG
+			bMid = bMid + realB
+
+		}
+	}
+	// RGB-Werte durch Pixel teilen um Mittelwerte zu erhalten
+	rMid = rMid / (poolsize * poolsize)
+	gMid = gMid / (poolsize * poolsize)
+	bMid = bMid / (poolsize * poolsize)
+
+	// Helligkeit auf Basis des Mittelwertes auslesen
+	brightness := math.Abs(math.Sqrt(rMid*rMid) + math.Sqrt(gMid*gMid) + math.Sqrt(bMid*bMid))
+	return brightness
 }
