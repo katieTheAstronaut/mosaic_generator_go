@@ -1,28 +1,30 @@
 <!-- Template für die Darstellung einer Basismotivsammlung -->
 <input type="button" name="backToImages" id="backToImages" value="Zurück">
-<div id="newImageWrapper">
-    <h3>Sammlung {{.Name}}</h3>
-    </br>
-    <div class="title">Füge deiner Sammlung ein Bild hinzu:</div>
 
+<div id="titleImages">Sammlung {{.Name}}</div>
 
-    <form id="imageUploadForm" enctype="multipart/form-data">
-        <fieldset>
-            <input type="file" name="newImg" id="newImg" multiple>
+<div id="flexRow">
+    <div id="newImageWrapper">
+        <div class="title">Füge deiner Sammlung ein Bild hinzu:</div>
 
-            </br></br>
-            <input type="button" name="newImgSubmit" id="newImgSubmit" value="Bild hochladen">
-        </fieldset>
-    </form>
+        <form id="imageUploadForm" enctype="multipart/form-data">
+            <fieldset>
+                <input type="file" name="newImg" id="newImg" multiple>
 
+                </br></br>
+                <input type="button" name="newImgSubmit" id="newImgSubmit" value="Bild hochladen">
+            </fieldset>
+        </form>
+    </div>
 
-</div>
-
-<div id="showImages"> Deine Bisherigen Bilder:
-    </br>
-    {{ range .Images}}
-    <img class="imageClicked" alt="{{ .Filename}}" src={{.URL}}>
-    {{end}}
-</br>
-<div id="imgInfos"></div>
+    <div id="showImages"> 
+        <div class="title">Deine bisherigen Bilder:</div>
+        <div id="subtitle">(Klicke auf ein Bild, um weitere Infos zu erhalten)</div>
+        </br>
+        {{ range .Images}}
+        <img class="imageClicked" alt="{{ .Filename}}" src={{.URL}}>
+        {{end}}
+        </br>
+        <div id="imgInfos"></div>
+    </div>
 </div>

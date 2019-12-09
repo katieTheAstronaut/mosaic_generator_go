@@ -2,30 +2,30 @@
 <input type="button" name="backToMain" id="backToMain" value="Zurück">
 
 <div id="titleImages">
-    Wähle eine Motivsammlung um weitere Bilder hinzuzufügen oder erstelle eine neue Sammlung:
+    Basismotive bilden die Vorlage für dein Mosaik.
 </div>
 
+<div id="flexRow">
+    <div id="newImageSetWrapper">
+        <div class="title">Erstelle eine neue Sammlung:</div>
+        <form id="imageSetForm">
+            <fieldset>
+                <input type="text" name="imgSetName" id="imgSetName" placeholder="Sammlungsname"/>
+            </br>
+                <input type="button" name="newImgSetSubmit" id="newImgSetSubmit" value="Sammlung erstellen">
+            </fieldset>
+        </form>
+    </div>
 
-<div id="imageSetWrapper">
-    <div class="title"> Wähle eine Sammlung:</div>
-    <!-- hier per range alle dem Nutzer zugeordneten Sammlungen auflisten 
-            (Name/Button um die Sammlung aufzurufen)-->
-    {{ range .ImgSets}}
-    <input type="button" name="showSet" id="showSet" class="setButtons" value="{{.SetName}}">
-    </br>
-    {{end}}
+    <div id="middle">oder </div>
 
-
-
-</div>
-
-<div id="newImageSetWrapper">
-    <div class="title">Oder lege eine neue Sammlung an:</div>
-    <form id="imageSetForm">
-        <fieldset>
-            <label>Name deiner neuen Motivsammlung:</label>
-            <input type="text" name="imgSetName" id="imgSetName" />
-            <input type="button" name="newImgSetSubmit" id="newImgSetSubmit" value="Sammlung erstellen">
-        </fieldset>
-    </form>
+    <div id="imageSetWrapper">
+        <div class="title"> Wähle eine existierende Sammlung:</div>
+        <!-- hier per range alle dem Nutzer zugeordneten Sammlungen auflisten 
+                (Name/Button um die Sammlung aufzurufen)-->
+        {{ range .ImgSets}}
+        <input type="button" name="showSet" id="showSet" class="setButtons" value="{{.SetName}}">
+        </br>
+        {{end}}
+    </div>
 </div>

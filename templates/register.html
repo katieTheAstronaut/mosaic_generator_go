@@ -1,25 +1,28 @@
 <!-- Template für die Registrierungsseite -->
-<h2>Neues Konto erstellen: </h2>
 
-<div id="characters">
-    <p>
-        Nutzername und Passwort müssen aus jeweils mind. 6 Zeichen bestehen. </br>
-        Zulässige Zeichen: a-z (Groß- und Kleinbuchstaben), Ziffern 0-9
-    </p>
-</div>
+
+
 <div id="inputWrapper">
+    <h2>Neues Konto erstellen: </h2>
     <form id="registerForm">
-        <label>Nutzername</label>
+        <label class="labels">Nutzername</label>
         <input class="inputs" type="text" name="usernameInput" id="usernameInput" />
         </br>
-        <label>Passwort</label>
+        <label class="labels">Passwort</label>
         <input class="inputs" type="password" name="passwordInput" id="passwordInput" />
     </form>
-</div>
 
-<div id="submit">
-    <input type="button" value="Zurück zum Login" id="changeToLogin">
-    <input type="button" class="button" value="Registrieren" id="registerButton">
+
+    <div id="submit">
+        <input type="button" class="loginButton" value="Registrieren" id="registerButton">
+        <input type="button" value="Zurück zum Login" id="changeToLogin">
+    </div>
+</div>
+<div id="characters">
+    <p>
+        Nutzername/Passwort mind. 6 Zeichen:  </br>
+        a-z, A-Z, 0-9, keine Sonderzeichen
+    </p>
 </div>
 
 <div id="errorOutput"></div>

@@ -1,34 +1,42 @@
 <!-- Template für die Darstellung der Mosaikgeneratorseite -->
 <input type="button" name="backToMain" id="backToMain" value="Zurück">
 
-<h3>Hier kannst du Mosaike erzeugen</h3>
+<div id="titleImages">
+    Zaubere hier dein Mosaik!
+</div>
 
-<form id="mosaicForm">
-    <div id="imgSetWrapper">
-        <div>Wähle hier dein Basismotiv - so wird das Mosaik am Ende aussehen:</div>
-
-        {{range .ImgList.ImgLists}}
-        Sammlung: {{.Name}}
+<div id="flexRow">
+    <form id="mosaicForm">
+        <div id="imgSetWrapper">
+            <div class="title">Wähle hier dein Basismotiv:</div>
+            <div id="subtitle">(So wird das Mosaik am Ende aussehen)</div>
         </br>
-        {{range .Images}}
 
-        <input type="radio" name="image" value="{{ .Filename}}"> <img alt="" src={{.URL}}>
-        {{end}}
-        </br>
-        {{end}}
+            {{range .ImgList.ImgLists}}
+            <div class="setName">Sammlung: {{.Name}}</div>
+            {{range .Images}}
 
-    </div>
+            <input type="radio" name="image" value="{{ .Filename}}" class="thumbs"> <img alt="" src={{.URL}}>
+            {{end}}
+            </br>
+            {{end}}
 
-    <div id="mosaicPoolWrapper">
-        <div>Wähle hier deinen Pool - aus diesen Kacheln wird das Mosaik am Ende generiert:</div>
-        {{range .PoolList.Pools}}
-        <input type="radio" name="pool" value="{{ .PoolName}}"> {{ .PoolName}} - Pixelgröße: {{ .Size}}</br>
-        {{end}}
-    </div>
+        </div>
 
-    <input type="button" name="mosaicSubmit" id="mosaicSubmit" value="Mosaik erstellen">
-</form>
-</br>
-</br>
+        <div id="mosaicPoolWrapper">
+                <div class="title">Wähle hier deinen Pool:</div>
+                <div id="subtitle">(aus diesen Kacheln wird das Mosaik generiert)</div>
+            </br>
+            
+            {{range .PoolList.Pools}}
+            <input type="radio" name="pool" value="{{ .PoolName}}"> {{ .PoolName}} <span id="spanStyle">Pixelgröße: {{ .Size}}</span></br>
+            {{end}}
+        </div>
 
-<div id="mosaicPlaceholder"></div>
+        <input type="button" name="mosaicSubmit" id="mosaicSubmit" value="Mosaik erstellen">
+    </form>
+    </br>
+    </br>
+
+    <div id="mosaicPlaceholder"></div>
+</div>

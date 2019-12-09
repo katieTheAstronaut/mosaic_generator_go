@@ -1,28 +1,32 @@
 <!-- Template für die Darstellung eines einzelnen Pools -->
 <input type="button" name="backToPools" id="backToPools" value="Zurück">
 
+<div id="titleImages">Pool: {{.Name}}</div>
 
-<h3>Pool {{.Name}} </h3>
+<div id="flexRow">
+    <div id="newPoolImgWrapper">
+        <div class="title">Füge deinem Pool ein Bild hinzu:</div>
+        <form id="imageUplForm" enctype="multipart/form-data">
+            <fieldset>
+                <input type="file" name="newImg" id="newImg" multiple>
 
-<form id="imageUplForm" enctype="multipart/form-data">
-    <fieldset>
-        <input type="file" name="newImg" id="newImg" multiple>
+                </br></br>
+                <input type="button" name="newImageSubmit" id="newImageSubmit" value="Bild hochladen">
+            </fieldset>
+        </form>
+    </div>
 
-        </br></br>
-        <input type="button" name="newImageSubmit" id="newImageSubmit" value="Bild hochladen">
-    </fieldset>
-</form>
-
-
-<div id="deleteOriginalsWrapper">
-        <label>Hier kannst du die Originale deiner Kacheln löschen:</label>
+    <div id="deleteOriginalsWrapper">
+        <div class="title">Hier kannst du die Originale deiner Kacheln löschen:</div>
         <input type="button" name="deleteOriginals" id="deleteOriginals" value="Originale löschen">
-</div>
+    </div>
 
-<div id="showImages"> Deine bisherigen Kachelbilder im Pool:
-    </br>
-    {{ range .Images}}
-    <img alt="" src={{.URL}}>
-    {{end}}
+    <div id="showImages">
+        <div class="title">Deine bisherigen Bilder:</div>
+        </br>
+        {{ range .Images}}
+        <img alt="" src={{.URL}}>
+        {{end}}
 
+    </div>
 </div>

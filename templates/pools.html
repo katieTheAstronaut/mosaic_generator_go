@@ -2,30 +2,36 @@
 
 <input type="button" name="backToMain" id="backToMain" value="Zurück">
 
-<div id="newPoolWrapper">
-    <div class="title">Lege einen neuen Pool an:</div>
-    <form id="poolForm">
-        <fieldset>
-            <label>Name des neuen Pools:</label>
-            <input type="text" name="poolName" id="poolName" />
-        </br>
-            <label>Gebe die Größe der Poolkacheln an:</label>
-            <input type="number" name="poolSize" min="10" max="30" value="20">
-        </br>
-            <input type="button" name="newPoolSubmit" id="newPoolSubmit" value="Pool erstellen">
-        </fieldset>
-    </form>
+<div id="titleImages">
+    Pools beinhalten die Kachelbilder für dein Mosaik.
 </div>
 
-<div id="allPoolsWrapper">
-    <div class="title"> Wähle einen Pool aus:</div>
-    <!-- hier per range alle dem Nutzer zugeordneten Pools als Buttons auflisten -->
-    {{ range .Pools}}
-    <input type="button" name="showPool" id="showPool" class="poolButtons" value="{{.PoolName}}">
-    <div class="poolInfoWrapper"> 
-        Informationen zu diesem Pool:
-        Größe der Kacheln: {{.Size}} Pixel
+<div id="flexRow">
+    <div id="newPoolWrapper">
+        <div class="title">Erstelle einen neuen Pool:</div>
+        <form id="poolForm">
+            <fieldset>
+                <label>Name des neuen Pools:</label>
+                <input type="text" name="poolName" id="poolName" />
+                </br>
+                <label>Gebe die Größe der Poolkacheln an:</label>
+                <input type="number" name="poolSize" min="10" max="30" value="20">
+                </br>
+                <input type="button" name="newPoolSubmit" id="newPoolSubmit" value="Pool erstellen">
+            </fieldset>
+        </form>
     </div>
-    </br>
-    {{end}}
+
+    <div id="middle">oder </div>
+
+    <div id="allPoolsWrapper">
+        <div class="title"> Wähle einen existierenden Pool:</div>
+        {{ range .Pools}}
+        <input type="button" name="showPool" id="showPool" class="poolButtons" value="{{.PoolName}}">
+        <div class="poolInfoWrapper">
+            Größe der Kacheln: {{.Size}} Pixel
+        </div>
+        </br>
+        {{end}}
+    </div>
 </div>

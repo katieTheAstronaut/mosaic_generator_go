@@ -15,31 +15,32 @@
 </head>
 
 <body>
-    <div id="header">
-        <div id="logo">PICX</div>
+    <nav id="header">
+        <div id="logo">PICX.</div>
         <div id="logout"></div>
-    </div>
-
+    </nav>
+    </br>
     <div id="template">
-        <h2>Anmelden</h2>
-
         <div id="inputWrapper">
+            <h2>Anmelden</h2>
             <form id="loginForm">
-                <label>Nutzername</label>
+                <label class="labels">Nutzername</label>
                 <input class="inputs" type="text" name="usernameInput" id="usernameInput" />
                 </br>
-                <label>Passwort</label>
+                <label class="labels">Passwort</label>
                 <input class="inputs" type="password" name="passwordInput" id="passwordInput" />
             </form>
+
+            <div id="submit">
+                <input type="button" class="loginButton" value="Anmelden" id="loginButton">
+                <input type="button" value="Neues Konto Erstellen" id="changeToRegister">
+            </div>
         </div>
-        
-        <div id="submit">
-            <input type="button" class="button" value="Anmelden" id="loginButton">
-            <input type="button" value="Neues Konto Erstellen" id="changeToRegister">
-        </div>
-        
+
+
+
         <div id="errorOutput"></div>
-        
+
     </div>
 
 </body>

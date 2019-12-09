@@ -1,3 +1,7 @@
+@import url('https://fonts.googleapis.com/css?family=Permanent+Marker&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Arizonia&display=swap');
+
 html {
     height: 100%;
 }
@@ -8,19 +12,43 @@ body {
     line-height: 1.2;
     padding: 0;
     margin: 0;
-    font-family: sans-serif;
+    font-family: 'Roboto', sans-serif;
 }
 
+#template{
+    margin-top: 60px;
+}
 
 /* ----------------------- Header -----------------------*/
 
 #header {
-    font-size: 2em;
-    color: black;
-    background-color: rgb(131, 212, 212);
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    width: 100%;
+    height: 60px;
     margin-bottom: 30px;
+    overflow: hidden;
 }
 
+
+
+#logo {
+    font-size: 2.5em;
+    color: black;
+    font-family: 'Permanent Marker', cursive;
+    margin-right: auto;
+    margin-left: 10px;
+}
+
+#logout{
+    text-align: center;
+    vertical-align: middle;
+    line-height: 50px;  
+    margin-right: 10px;
+}
 
 /* ----------------------- Elemente der login und registration templates -----------------------*/
 #errorOutput {
@@ -33,36 +61,35 @@ body {
 }
 
 #inputWrapper{
-    margin: 0px auto;
-    width: 300px;
+    margin: 100px auto 0px auto;
+    width: 350px;
+    height: 280px;
+    border-radius: 20px;
+    background-color: rgb(131, 212, 212);
 }
 
 .inputs{
     float:right;
+    margin-right: 20px;
 }
 
-.button{
+.labels{
+    margin-left: 20px;
+}
+
+.loginButton{
     width: 100px;
     height: 40px;
     font-size: 1.5em;
 }
 
-#changeToRegister{
+#changeToRegister, #changeToLogin{
     border: none;
     background:none;
     padding:0;
     font-size: 0.5em;
-    margin-left: 10px;
-    color: red;
-}
-
-#changeToLogin{
-    border: none;
-    background:none;
-    padding:0;
-    font-size: 0.5em;
-    margin-left: 10px;
-    color: red;
+    margin-left: 15px;
+    color: rgb(179, 0, 0);
 }
 
 #submit{
@@ -81,7 +108,7 @@ h2{
     background-color: rgb(236, 234, 234);
     border: 1px solid rgb(66, 66, 66);
     width: 350px;
-    margin: 30px auto;
+    margin: 10px auto;
     text-align: center;
     vertical-align: middle;
 }
@@ -90,44 +117,114 @@ h2{
 
 /* ----------------------- Elemente des home-Templates -----------------------*/
 
+#welcome,#titleImages{
+    text-align: center;
+    margin-top: 80px;
+    height: 30px;
+    color: #49d3dd;
+}
+
 #tripleSectionWrapper{
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
+    margin-top: 100px;
+    font-size: 1.2em;
+    color: #0f4d71;
+    text-align: center;
+    vertical-align: middle;
 }
 
+#textWrapper{
+    width: 20%;
+}
 .sectionWrapper{
-    width: 200px;
-    height: 200px;
-    border: 1px solid;
-    border-radius: 50%;
+    width: 100%;
+    height: 300px;
+    border-radius: 20px;
     text-align: center;
     vertical-align: middle;
     line-height: 200px;  
 }
 
+#motiveWrapper, #poolWrapper,#mosaicWrapper{
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+
+}
+
 #motiveWrapper{
-    background-color: rgb(146, 238, 226);
+    background-image: url('/imgs/b.jpg');
 }
 
 #poolWrapper{
-    background-color: rgb(73, 211, 221);
+    background-image: url('/imgs/p.jpg');
 }
 
 #mosaicWrapper{
-    background-color: rgb(26, 101, 145);
+    background-image: url('/imgs/m.jpg');
 }
+
+#deleteUser{
+float:right;
+margin-top: 50px;
+margin-right: 20px;
+}
+
+
 
 
 /* ----------------------- Elemente der images und imageSet-Templates -----------------------*/
-#header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
+
+#backToMain, #backToImages{
+    margin-left: 20px;
 }
 
-#newImageSetWrapper, #imageSetWrapper, #newImageWrapper{
-    margin-left: 20px;
+#flexRow{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    width: 50%;
+    margin: 0 auto;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#newImageSetWrapper{
+    margin-top: 20px;
+}
+
+#middle{
+    margin-top: 30px;
+}
+
+#imageSetWrapper{
+    margin-top: 40px;
+    min-height: 100px;
+    padding-bottom: 10px;
+}
+
+#newImageSetWrapper{
+    min-height: 150px;
+}
+
+#newImageSetWrapper, #imageSetWrapper{
+    border-radius: 20px;
+    background-color: #49d3dd9e;
+}
+
+fieldset {
+    border: 0;
+}
+
+.title{
+    margin-top: 15px;
+}
+
+#imageSetForm{
+    width: 80%;
+    margin: 15px auto;
 }
 
 #titleImages {
@@ -138,15 +235,17 @@ h2{
     font-size: 1.4em;
 }
 
+
 #newImageWrapper{
     margin-top: 50px;
+    border-radius: 20px;
+    background-color: #49d3dd9e;
 }
 
 #imageUploadForm{
     margin:20px auto;
-    width: 80%;
+    width: 60%;
 }
-
 
 #titleSet{
     margin:20px auto;
@@ -154,13 +253,105 @@ h2{
     width: 50;
 }
 
-h3{
+#showImages{
+    margin-top: 30px;
+}
+
+#subtitle{
+    font-size: 0.8em;
+    color: rgb(110, 110, 110);
+}
+
+#imgInfos{
+    text-align: left;
+    font-size: 0.7em;
+    color:rgb(110, 110, 110);
+    width: 50%;
+    margin: 10px auto;
+    font-style: italic;
+
+}
+
+#infoWrapper{
+    border-radius: 20px;
+    background-color: #49d3dd52;
+    padding: 10px;
+}
+
+
+/* ----------------------- Elemente der pools und singlePool-Templates -----------------------*/
+
+#newPoolWrapper, #allPoolsWrapper{
+    border-radius: 20px;
+    background-color: #49d3dd9e;
+}
+
+#newPoolWrapper{
+    margin-top: 20px;
+    min-height: 150px;
+}
+
+#allPoolsWrapper{
+    margin-top: 40px;
+    min-height: 100px;
+    padding-bottom: 10px;
+}
+
+.poolInfoWrapper{
+    font-size: 0.7em;
+    color:rgb(110, 110, 110);
+    font-style: italic;
+}
+
+#newPoolImgWrapper{
+    margin-top: 50px;
+    border-radius: 20px;
+    background-color: #49d3dd9e;
+}
+
+#deleteOriginalsWrapper{
+    margin-top: 20px;
+    border-radius: 20px;
+    background-color: #5bb0e270;
+    padding-bottom: 10px;
+}
+/* ----------------------- Elemente der mosaic und mosaicDisplay-Templates -----------------------*/
+
+#imgSetWrapper{
+    min-height: 150px;
+    margin-top: 50px;
+    border-radius: 20px;
+    background-color: #49d3dd9e;
+}
+
+#mosaicPoolWrapper{
+    min-height: 150px;
+    margin-top: 50px;
+    border-radius: 20px;
+    background-color: #5bb0e270;
+}
+
+#spanStyle{
+    font-size: 0.6em;
+    color:rgb(110, 110, 110);
+    font-style: italic;
     text-align: center;
     vertical-align: middle;
-    line-height: 50px;  
+}
+
+#mosaicSubmit{
+    margin-top: 20px;
+    width: 150px;
+    font-size: 2em;
 }
 
 #mosaicPlaceholder{
     width: 300px;
     height:300px;
+    margin: 0px auto;
+}
+
+.setName{
+    color: #6b6b6b;
+    margin-top: 10px;
 }

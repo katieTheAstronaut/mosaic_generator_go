@@ -132,8 +132,8 @@ func AddImage(r *http.Request) {
 				_, err = io.Copy(gridFile, uplFile)
 
 				err = gridFile.Close()
-				// Jedes Bild wird automatisch auf etwa 80Pixel Breihe oder Höhe (Verhältnis bleibt erhalten) runterskaliert
-				Resize(newFileName, 80, r, user)
+				// Jedes Bild wird automatisch auf etwa 50Pixel Breihe oder Höhe (Verhältnis bleibt erhalten) runterskaliert
+				Resize(newFileName, 50, r, user)
 
 				// Original löschen (da meist viel zu groß)
 				imageCollection.Remove(newFileName)
