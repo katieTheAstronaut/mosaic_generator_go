@@ -2,8 +2,10 @@
 <input type="button" name="backToMain" id="backToMain" value="Zurück">
 
 <div id="titleImages">
-    Zaubere hier dein Mosaik!
+    Zaubere hier dein neues Mosaik!
 </div>
+
+<input type="button" name="showMosaics" id="showMosaics" value="Alte Mosaikbilder">
 
 <div id="flexRow">
     <form id="mosaicForm">
@@ -33,10 +35,12 @@
             {{end}}
         </div>
 
-        <input type="button" name="mosaicSubmit" id="mosaicSubmit" value="Mosaik erstellen">
+        <input type="button" name="mosaicSubmit" id="mosaicSubmit" value="Mosaik erstellen (sehr langsam!)">
+        <input type="button" name="mosaicSubmitFast" id="mosaicSubmitFast" value="Mosaik erstellen (schnell)">
     </form>
     </br>
     </br>
 
     <div id="mosaicPlaceholder"></div>
+    
 </div>

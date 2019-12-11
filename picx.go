@@ -26,7 +26,7 @@ var t = template.Must(template.ParseFiles("templates/picx.html",
 	"templates/register.html", "templates/login.html", "templates/home.html",
 	"templates/images.html", "templates/imageSet.html", "templates/pools.html",
 	"templates/singlePool.html", "templates/mosaic.html", "templates/mosaicDisplay.html",
-	"templates/imageInfo.html"))
+	"templates/imageInfo.html", "templates/mosaicSet.html", "templates/mosaicInfo.html"))
 
 // deklariert Datenbank
 var dataB *mgo.Database
@@ -48,41 +48,42 @@ func main() {
 	defer dbSession.Close()
 	// Datenbank wählen (bzw. neu erstellen, wenn noch nicht vorhanden)
 	dataB = dbSession.DB("HA19DB_kathrin_duerkop_630119")
-	// Collections für Nutzerverwaltung an usermanagement package übergeben
+	// Collections an die jeweiligen Packages übergeben
 	usermanagement.GetUserCollection(dataB.C("userColl"), dataB.C("poolsColl"), dataB.C("imgSetColl"), dataB.GridFS("imageColl"))
-	// Collections für Bilder und Motivsammlungen an package images übergeben
 	images.GetImgCollections(dataB.GridFS("imageColl"), dataB.C("imgSetColl"))
-	// Collection für Pools und Bilder an package pools übergeben
 	pools.GetCollections(dataB.GridFS("imageColl"), dataB.C("poolsColl"))
-	// Collection für Bilder an package mosaic übergeben
 	mosaic.GetCollections(dataB.GridFS("imageColl"), dataB.C("poolsColl"))
 
 	// File Server für statische Element (CSS, JS, ..) registrieren
 	http.Handle("/", http.FileServer(http.Dir("./static/")))
 
 	// ----Funktions-Handler-------------------------
-	http.HandleFunc("/picx", handlerPicx)                           // http://localhost:4242/picx
-	http.HandleFunc("/postNewUser", handlerNewUser)                 // http://localhost:4242/postNewUser
-	http.HandleFunc("/getRegistration", handlerGetRegistration)     // http://localhost:4242/getRegistration
-	http.HandleFunc("/getLogin", handlerGetLogin)                   // http://localhost:4242/getLogin
-	http.HandleFunc("/home", handlerHome)                           // http://localhost:4242/home
-	http.HandleFunc("/backToHome", handlerBackToHome)               // http://localhost:4242/backToHome
-	http.HandleFunc("/images", handlerImages)                       // http://localhost:4242/images
-	http.HandleFunc("/uploadImage", handlerUploadImage)             // http://localhost:4242/uploadImage
-	http.HandleFunc("/createSet", handlerCreateSet)                 // http://localhost:4242/createSet
-	http.HandleFunc("/showSet", handleShowSet)                      // http://localhost:4242/showSet
-	http.HandleFunc("/showImg", handleShowImg)                      // http://localhost:4242/showImg
-	http.HandleFunc("/logout", handleLogout)                        // http://localhost:4242/logout
-	http.HandleFunc("/pools", handlerPools)                         // http://localhost:4242/pools
-	http.HandleFunc("/createPool", handlerCreatePool)               // http://localhost:4242/createPool
-	http.HandleFunc("/showPool", handlerShowPool)                   // http://localhost:4242/showPool
-	http.HandleFunc("/uploadImageToPool", handlerUploadImageToPool) // http://localhost:4242/uploadImageToPool
-	http.HandleFunc("/deleteOriginals", handlerDeleteOriginals)     // http://localhost:4242/deleteOriginals
-	http.HandleFunc("/deleteUser", handlerDeleteUser)               // http://localhost:4242/deleteUser
-	http.HandleFunc("/mosaic", handlerMosaic)                       // http://localhost:4242/mosaic
-	http.HandleFunc("/generateMosaic", handlerGenerateMosaic)       // http://localhost:4242/generateMosaic
-	http.HandleFunc("/showMosaic", handlerShowMosaic)               // http://localhost:4242/showMosaic
-	http.HandleFunc("/getInfo", handlerGetInfo)                     // http://localhost:4242/getInfo
+	http.HandleFunc("/picx", handlerPicx)                             // http://localhost:4242/picx
+	http.HandleFunc("/postNewUser", handlerNewUser)                   // http://localhost:4242/postNewUser
+	http.HandleFunc("/getRegistration", handlerGetRegistration)       // http://localhost:4242/getRegistration
+	http.HandleFunc("/getLogin", handlerGetLogin)                     // http://localhost:4242/getLogin
+	http.HandleFunc("/home", handlerHome)                             // http://localhost:4242/home
+	http.HandleFunc("/backToHome", handlerBackToHome)                 // http://localhost:4242/backToHome
+	http.HandleFunc("/images", handlerImages)                         // http://localhost:4242/images
+	http.HandleFunc("/uploadImage", handlerUploadImage)               // http://localhost:4242/uploadImage
+	http.HandleFunc("/createSet", handlerCreateSet)                   // http://localhost:4242/createSet
+	http.HandleFunc("/showSet", handleShowSet)                        // http://localhost:4242/showSet
+	http.HandleFunc("/showImg", handleShowImg)                        // http://localhost:4242/showImg
+	http.HandleFunc("/logout", handleLogout)                          // http://localhost:4242/logout
+	http.HandleFunc("/pools", handlerPools)                           // http://localhost:4242/pools
+	http.HandleFunc("/createPool", handlerCreatePool)                 // http://localhost:4242/createPool
+	http.HandleFunc("/showPool", handlerShowPool)                     // http://localhost:4242/showPool
+	http.HandleFunc("/uploadImageToPool", handlerUploadImageToPool)   // http://localhost:4242/uploadImageToPool
+	http.HandleFunc("/deleteOriginals", handlerDeleteOriginals)       // http://localhost:4242/deleteOriginals
+	http.HandleFunc("/deleteUser", handlerDeleteUser)                 // http://localhost:4242/deleteUser
+	http.HandleFunc("/mosaic", handlerMosaic)                         // http://localhost:4242/mosaic
+	http.HandleFunc("/generateMosaic", handlerGenerateMosaic)         // http://localhost:4242/generateMosaic
+	http.HandleFunc("/generateMosaicFast", handlerGenerateMosaicFast) // http://localhost:4242/generateMosaicFast
+	http.HandleFunc("/showMosaic", handlerShowMosaic)                 // http://localhost:4242/showMosaic
+	http.HandleFunc("/showAllMosaics", handlerShowAllMosaics)         // http://localhost:4242/showAllMosaics
+	http.HandleFunc("/getInfo", handlerGetInfo)                       // http://localhost:4242/getInfo
+	http.HandleFunc("/getMosaicInfo", handlerGetMosaicInfo)           // http://localhost:4242/getMosaicInfo
+	http.HandleFunc("/showMosaicBig", handlerShowMosaicBig)           // http://localhost:4242/showMosaicBig
 
 	err := http.ListenAndServe(":4242", nil)
 	if err != nil {
@@ -310,9 +311,8 @@ func handlerMosaic(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, t.ExecuteTemplate(w, "mosaic.html", mosaicInfo))
 }
 
-// Handler für das Erstellen des Mosaiks
+// Handler für das Erstellen des Mosaiks mit Farbabstands-Algorithmus
 func handlerGenerateMosaic(w http.ResponseWriter, r *http.Request) {
-
 	// Motivbild und Pool aus Form auslesen
 	baseImage := r.PostFormValue("image")
 	pool := r.PostFormValue("pool")
@@ -321,11 +321,31 @@ func handlerGenerateMosaic(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, t.ExecuteTemplate(w, "mosaicDisplay.html", newMosaic))
 }
 
+// Handler für das Erstellen des Mosaiks mit Helligkeits-Algorithmus
+func handlerGenerateMosaicFast(w http.ResponseWriter, r *http.Request) {
+
+	// Motivbild und Pool aus Form auslesen
+	baseImage := r.PostFormValue("image")
+	pool := r.PostFormValue("pool")
+
+	newMosaic := mosaic.GenerateMosaicFast(baseImage, pool, r)
+	fmt.Fprint(w, t.ExecuteTemplate(w, "mosaicDisplay.html", newMosaic))
+}
+
+// Handler für die Darstellung eines einzelnen Mosaiks
 func handlerShowMosaic(w http.ResponseWriter, r *http.Request) {
 	// Funktion zum auslesen und anzeigen eines einzelnen Bildes im Paket images aufrufen
 	mosaic.ShowMosaic(r, w)
 }
 
+// Handler für die Darstellung aller bisherigen Mosaike
+func handlerShowAllMosaics(w http.ResponseWriter, r *http.Request) {
+	// Funktion zum auslesen und anzeigen eines einzelnen Bildes im Paket images aufrufen
+	mosaics := mosaic.GetAllMosaics(r, w)
+	fmt.Fprint(w, t.ExecuteTemplate(w, "mosaicSet.html", mosaics))
+}
+
+// Handler um Bildinformationen darzustellen
 func handlerGetInfo(w http.ResponseWriter, r *http.Request) {
 	// Funktion zum Abfragen der Bildinformationen eines übergebenen Bildes
 	image := r.URL.Query().Get("img")
@@ -333,4 +353,20 @@ func handlerGetInfo(w http.ResponseWriter, r *http.Request) {
 	imageInfo := images.GetImageInfo(image)
 
 	fmt.Fprint(w, t.ExecuteTemplate(w, "imageInfo.html", imageInfo))
+}
+
+// Handler um Bildinformationen der Mosaike darzustellen
+func handlerGetMosaicInfo(w http.ResponseWriter, r *http.Request) {
+	// Funktion zum Abfragen der Bildinformationen eines übergebenen Mosaikbildes
+	mosaicName := r.URL.Query().Get("mosaicName")
+
+	fmt.Print(mosaicName)
+	mosaicInfo := mosaic.GetMosaicInfo(mosaicName)
+	fmt.Print(mosaicInfo)
+	fmt.Fprint(w, t.ExecuteTemplate(w, "mosaicInfo.html", mosaicInfo))
+}
+
+// Handler um Mosaik in Originalgröße darzustellen
+func handlerShowMosaicBig(w http.ResponseWriter, r *http.Request) {
+	mosaic.ShowMosaicBig(r, w)
 }

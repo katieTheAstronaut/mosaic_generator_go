@@ -285,7 +285,6 @@ func DeleteOriginals(r *http.Request) {
 			imageCollection.Remove(result.Name())
 		}
 	}
-
 }
 
 // Funktion um aktuellen Nutzer auszulesen
@@ -299,6 +298,17 @@ func getCurrentUser(r *http.Request) string {
 // Funktion um Helligkeit eines ganzen Bildes zu berechnen
 func ComputeBrightnessOfImg(filename string, poolSize int) float64 {
 
+	// Mittlere Farbwerte der Kachel abrufen
+	rMid, gMid, bMid := computeColour(filename, poolSize)
+
+	// Helligkeit auf Basis des Mittelwertes auslesen
+	brightness := math.Sqrt((rMid * rMid) + (gMid * gMid) + (bMid * bMid))
+
+	return brightness
+}
+
+// Funktion um die mittlere Farbe einer Kachel zu berechnen
+func computeColour(filename string, poolSize int) (float64, float64, float64) {
 	// Gewünschtes Bild öffnen
 	img, _ := imageCollection.Open(filename)
 	decodedImg, _ := imaging.Decode(img)
@@ -329,10 +339,8 @@ func ComputeBrightnessOfImg(filename string, poolSize int) float64 {
 	gMid = gMid / (poolsize * poolsize)
 	bMid = bMid / (poolsize * poolsize)
 
-	// Helligkeit auf Basis des Mittelwertes auslesen
-	brightness := math.Sqrt(rMid*rMid) + math.Sqrt(gMid*gMid) + math.Sqrt(bMid*bMid)
-
 	img.Close()
 
-	return brightness
+	return rMid, gMid, bMid
+
 }

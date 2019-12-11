@@ -1,0 +1,16 @@
+<!-- Template für die Darstellung aller Mosaike -->
+<input type="button" name="backToMosaics" id="backToMosaics" value="Zurück">
+
+<div id="titleImages">Deine bisherigen Mosaikbilder:</div>
+
+<div id="flexRow">
+    <div id="showMosaics"> 
+        <div id="subtitle">(Klicke auf ein Bild, um weitere Infos zu erhalten und es zu vergrößern)</div>
+        </br>
+        {{ range .Images}}
+        <img class="mosaicClicked" alt="{{ .Filename}}" src={{.URL}}>
+        {{end}}
+        </br>
+        <div id="mosaicInfos"></div>
+    </div>
+</div>

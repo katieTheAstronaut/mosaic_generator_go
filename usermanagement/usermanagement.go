@@ -57,7 +57,7 @@ func RegisterNewUser(user string, pw string) (errorMessage string) {
 	}
 
 	// Prüfen ob Passwort lang genug ist
-	if len(pw) <= 1 {
+	if len(pw) <= 5 {
 		errorMessage = "Fehler: Das Passwort sollte aus mindesten 6 Zeichen bestehen!"
 		return errorMessage
 	}
@@ -118,11 +118,9 @@ func isValidString(value string) (isValid bool) {
 	//nutzt regexp, ein package von golang.org um auf regulären Ausdruck zu testen
 	//MustCompile panicked, wenn der Ausdruck nicht geparst werden kann
 	checkString := regexp.MustCompile(`^[A-Za-z0-9]+$`).MatchString
-
 	if !checkString(value) {
 		return false
 	}
-
 	return true
 }
 

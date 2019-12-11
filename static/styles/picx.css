@@ -339,10 +339,15 @@ fieldset {
     vertical-align: middle;
 }
 
-#mosaicSubmit{
+#mosaicSubmit,#mosaicSubmitFast{
     margin-top: 20px;
-    width: 150px;
-    font-size: 2em;
+    width: 250px;
+    font-size: 1.5em;
+    
+}
+
+#mosaicSubmitFast{
+margin-left: 10px;
 }
 
 #mosaicPlaceholder{
@@ -354,4 +359,8 @@ fieldset {
 .setName{
     color: #6b6b6b;
     margin-top: 10px;
+}
+
+#showMosaics{
+    margin: 10px auto;
 }

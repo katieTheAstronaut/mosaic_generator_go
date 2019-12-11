@@ -42,9 +42,6 @@ function addJSforRegister() {
     // EventListener für den "Zurück Zum Login"-Button, der wieder zur Anmeldeseite wechselt
     $("changeToLogin").addEventListener("click", function () {
 
-        //------------------------------------------------
-        // XMLHttpRequest um Nutzerdaten zu schicken 
-        //------------------------------------------------
         var xhrGetLogin = new XMLHttpRequest();
 
         xhrGetLogin.addEventListener('load', function () {
@@ -118,17 +115,12 @@ function addJSforLogin() {
                 // JavaScript Funktionen für das Home Template initialisieren.
                 addJSforHome();
             }
-
-
         });
 
         // Anfrage definieren und mit FormValues absenden
         xhrGetHome.open('POST', 'http://localhost:4242/home');
         xhrGetHome.send(new FormData($('loginForm')));
-
     })
-
-
 };
 
 
@@ -215,7 +207,7 @@ function addJSforHome() {
     $("mosaicWrapper").addEventListener("click", function () {
 
         //------------------------------------------------
-        // XMLHttpRequest um Pool-Seite anzufordern
+        // XMLHttpRequest um Mosaik-Seite anzufordern
         //------------------------------------------------
         var xhrGetMosaicTemplate = new XMLHttpRequest();
 
@@ -236,11 +228,10 @@ function addJSforHome() {
     // Eventlistener für den Nutzer löschen
     $("deleteUser").addEventListener("click", function () {
 
-        //------------------------------------------------
-        // XMLHttpRequest um Pool-Seite anzufordern
-        //------------------------------------------------
         var xhrDeleteUser = new XMLHttpRequest();
-
+        //------------------------------------------------
+        // XMLHttpRequest um Nutzer zu Löschen
+        //------------------------------------------------
         // callback, um Template als Antwort zu erhalten und diese im html einzusetzen
         xhrDeleteUser.addEventListener('load', function () {
             $("template").innerHTML = xhrDeleteUser.responseText;
@@ -326,7 +317,7 @@ function addJSforImageSet() {
     $("backToImages").addEventListener("click", function () {
 
         //------------------------------------------------
-        // XMLHttpRequest um neue Sammlung zu erstellen
+        // XMLHttpRequest um zurück zur Sammlungsübersicht zu gelangen
         //------------------------------------------------
         var xhrBackToImages = new XMLHttpRequest();
 
@@ -375,7 +366,7 @@ function addJSforImageSet() {
         setImages[i].addEventListener("click", function () {
 
             //------------------------------------------------
-            // XMLHttpRequest um Sammlung darzustellen
+            // XMLHttpRequest um zu jedem Bild auf Klick weitere Informationen anzuzeigen
             //------------------------------------------------
             var xhrGetInfo = new XMLHttpRequest();
 
@@ -387,7 +378,7 @@ function addJSforImageSet() {
             });
             // Anfrage definieren und Sammlungsname als Query mit absenden
             var img = this.getAttribute('alt'); // Wert des aktuell gedrückten Buttons auslesen = Sammlungsname
-           
+
             xhrGetInfo.open('GET', `http://localhost:4242/getInfo?img=${img}`);
             xhrGetInfo.send();
 
@@ -412,7 +403,7 @@ function addJSforPools() {
     $("newPoolSubmit").addEventListener("click", function () {
 
         //------------------------------------------------
-        // XMLHttpRequest um neue Sammlung zu erstellen
+        // XMLHttpRequest um neuen Pool zu erstellen
         //------------------------------------------------
         var xhrPostPool = new XMLHttpRequest();
 
@@ -429,14 +420,14 @@ function addJSforPools() {
     });
 
 
-    // Eventlistener für alle Sammlungs-Buttons, die zur jeweiligen Sammlungsseite führen
+    // Eventlistener für alle Pool-Buttons, die zur jeweiligen Poolseite führen
     var buttons = document.getElementsByClassName("poolButtons");
 
     for (i = 0; i < buttons.length; i++) {
         buttons[i].addEventListener("click", function () {
 
             //------------------------------------------------
-            // XMLHttpRequest um Sammlung darzustellen
+            // XMLHttpRequest um Pool darzustellen
             //------------------------------------------------
             var xhrShowPool = new XMLHttpRequest();
 
@@ -447,7 +438,7 @@ function addJSforPools() {
                 addJSforSinglePool();
             });
             // Anfrage definieren und Sammlungsname als Query mit absenden
-            var pool = this.value; // Wert des aktuell gedrückten Buttons auslesen = Sammlungsname
+            var pool = this.value; // Wert des aktuell gedrückten Buttons auslesen = Poolname
             xhrShowPool.open('POST', `http://localhost:4242/showPool?pool=${pool}`);
             xhrShowPool.send();
 
@@ -466,13 +457,8 @@ function addJSforSinglePool() {
 
     // Eventlistener für den Zurück-Button
     $("backToPools").addEventListener("click", function () {
-
-        //------------------------------------------------
-        // XMLHttpRequest um neue Sammlung zu erstellen
-        //------------------------------------------------
         var xhrBackToPools = new XMLHttpRequest();
 
-        // Nachdem neue Sammlung erstellt wurde, soll Template neu aufgerufen werden (mit aktualisierten Informationen)
         xhrBackToPools.addEventListener('load', function () {
             $("template").innerHTML = xhrBackToPools.responseText;
             // JavaScript Funktionen für das nächste Template initialisieren.
@@ -491,15 +477,12 @@ function addJSforSinglePool() {
     $("newImageSubmit").addEventListener("click", function () {
 
         //------------------------------------------------
-        // XMLHttpRequest um Bild hochzuladen
+        // XMLHttpRequest um Bild in Pool hochzuladen
         //------------------------------------------------
         var xhrPostImageToPool = new XMLHttpRequest();
 
-
         // callback, um Template als Antwort zu erhalten und diese im html einzusetzen
         xhrPostImageToPool.addEventListener('load', function () {
-
-
             $("template").innerHTML = xhrPostImageToPool.responseText;
 
             // JavaScript Funktionen für das nächste Template initialisieren.
@@ -517,11 +500,10 @@ function addJSforSinglePool() {
     $("deleteOriginals").addEventListener("click", function () {
 
         //------------------------------------------------
-        // XMLHttpRequest um neue Sammlung zu erstellen
+        // XMLHttpRequest um Originale der Kacheln zu löschen
         //------------------------------------------------
         var xhrDeleteOriginals = new XMLHttpRequest();
 
-        // Nachdem neue Sammlung erstellt wurde, soll Template neu aufgerufen werden (mit aktualisierten Informationen)
         xhrDeleteOriginals.addEventListener('load', function () {
             $("template").innerHTML = xhrDeleteOriginals.responseText;
             // JavaScript Funktionen für das nächste Template initialisieren.
@@ -545,11 +527,28 @@ function addJSforMosaic() {
     // Eventlistener für den Zurück-Button setzen
     backToMain();
 
+
+    // EventListener für den Alte Mosaike Anzeigen-Button
+    $("showMosaics").addEventListener("click", function () {
+
+        var xhrshowAllMosaics = new XMLHttpRequest();
+
+        // Nachdem neue Sammlung erstellt wurde, soll Template neu aufgerufen werden (mit aktualisierten Informationen)
+        xhrshowAllMosaics.addEventListener('load', function () {
+            $("template").innerHTML = xhrshowAllMosaics.responseText;
+            // JavaScript Funktionen für das nächste Template initialisieren.
+            addJSforMosaicSet();
+        });
+
+        // Anfrage definieren und mit FormValues absenden
+        xhrshowAllMosaics.open('GET', 'http://localhost:4242/showAllMosaics');
+        xhrshowAllMosaics.send();
+    });
+
     // Eventlistener für den Mosaik-Erstellen-Button
     $("mosaicSubmit").addEventListener("click", function () {
-
         //------------------------------------------------
-        // XMLHttpRequest um neue Sammlung zu erstellen
+        // XMLHttpRequest um Mosaik zu erstellen
         //------------------------------------------------
         var xhrGetMosaic = new XMLHttpRequest();
 
@@ -566,8 +565,73 @@ function addJSforMosaic() {
 
     });
 
+    // Eventlistener für den Mosaik-Erstellen-Button
+    $("mosaicSubmitFast").addEventListener("click", function () {
+        //------------------------------------------------
+        // XMLHttpRequest um Mosaik mit schnellem Algorithmus zu erstellen
+        //------------------------------------------------
+        var xhrGetFastMosaic = new XMLHttpRequest();
+
+        // Nachdem neue Sammlung erstellt wurde, soll Template neu aufgerufen werden (mit aktualisierten Informationen)
+        xhrGetFastMosaic.addEventListener('load', function () {
+            $("mosaicPlaceholder").innerHTML = xhrGetFastMosaic.responseText;
+            // JavaScript Funktionen für das nächste Template initialisieren.
+            addJSforMosaic();
+        });
+        // Anfrage definieren und mit FormValues absenden
+        xhrGetFastMosaic.open('POST', 'http://localhost:4242/generateMosaicFast');
+        xhrGetFastMosaic.send(new FormData($('mosaicForm')));
+    });
+}
 
 
+
+//#################################
+//MosaikSet-Template
+//#################################
+function addJSforMosaicSet() {
+
+    // Eventlistener für den Zurück-Button
+    $("backToMosaics").addEventListener("click", function () {
+        var xhrBackToMosaik = new XMLHttpRequest();
+
+        xhrBackToMosaik.addEventListener('load', function () {
+            $("template").innerHTML = xhrBackToMosaik.responseText;
+            // JavaScript Funktionen für das nächste Template initialisieren.
+            addJSforMosaic();
+        });
+
+        // Anfrage definieren und mit FormValues absenden
+        xhrBackToMosaik.open('GET', 'http://localhost:4242/mosaic');
+        xhrBackToMosaik.send();
+
+    });
+
+    // Alle dargestellten Bilder der Sammlung abfragen
+    var mosaics = document.getElementsByClassName("mosaicClicked");
+    // Allen Bildern einen Eventlistener geben, sodass bei Click auf ein Bild die 
+    //Bildinformationen abgefragt und dargestellt werden
+    for (i = 0; i < mosaics.length; i++) {
+        mosaics[i].addEventListener("click", function () {
+
+            //------------------------------------------------
+            // XMLHttpRequest um Mosaikinformationen darzustellen
+            //------------------------------------------------
+            var xhrGetMosaicInfo = new XMLHttpRequest();
+
+            xhrGetMosaicInfo.addEventListener('load', function () {
+                $("mosaicInfos").innerHTML = xhrGetMosaicInfo.responseText;
+                // JavaScript Funktionen für das nächste Template initialisieren.
+                addJSforMosaicSet();
+            });
+            // Anfrage definieren und Mosaikname als Query mit absenden
+            var mosaicName = this.getAttribute('alt'); // Wert des aktuell gedrückten Buttons auslesen = Filename
+
+            xhrGetMosaicInfo.open('GET', `http://localhost:4242/getMosaicInfo?mosaicName=${mosaicName}`);
+            xhrGetMosaicInfo.send();
+
+        });
+    }
 }
 
 
@@ -579,13 +643,8 @@ function addJSforMosaic() {
 function backToMain() {
     // Eventlistener für den Zurück-Button, um zur Übersichtsseite zurück zu kommen
     $("backToMain").addEventListener("click", function () {
-
-        //------------------------------------------------
-        // XMLHttpRequest um neue Sammlung zu erstellen
-        //------------------------------------------------
         var xhrBackToMain = new XMLHttpRequest();
 
-        // Nachdem neue Sammlung erstellt wurde, soll Template neu aufgerufen werden (mit aktualisierten Informationen)
         xhrBackToMain.addEventListener('load', function () {
             $("template").innerHTML = xhrBackToMain.responseText;
             // JavaScript Funktionen für das nächste Template initialisieren.

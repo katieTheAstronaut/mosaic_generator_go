@@ -365,8 +365,7 @@ func ComputeBrightnessOfImg(filename string, width int, height int) (float64, fl
 	bMid = bMid / pixels
 
 	// Helligkeit auf Basis des Mittelwertes auslesen
-	brightness := math.Sqrt(rMid*rMid) + math.Sqrt(gMid*gMid) + math.Sqrt(bMid*bMid)
-
+	brightness := math.Sqrt((rMid * rMid) + (gMid * gMid) + (bMid * bMid))
 	img.Close()
 
 	return brightness, rMid, gMid, bMid
